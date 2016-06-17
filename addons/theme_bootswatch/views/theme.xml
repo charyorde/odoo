@@ -1,198 +1,403 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
-<data>
-
-<template id="theme_customize" inherit_id="website.theme_customize" name="theme_customize Bootswatch">
-    <xpath expr="div" position="replace">
-
-      <div id="theme_customize_modal" class="modal fade bs-example-modal-sm">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="loading_backdrop"></div>
-            <div class="modal-header">
-              <button type="button" class="close">×</button>
-              <h4 class="modal-title">Customize your theme</h4>
-            </div>
-            <div class="modal-body">
-              <table>
-                <tr>
-                  <td>
-                    <label class="checked">
-                      <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/img/bootswatch_default_thumbnail.png" alt="Default Theme"/>
-                      <input name="theme" type="radio" data-xmlid="" checked="checked"/>
-                    </label>
-                  </td>
-                  <td>
-                    <label>
-                      <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/amelia/thumbnail.png" alt="Amelia"/>
-                      <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_amelia"/>
-                    </label>
-                  </td>
-                  <td>
-                    <label>
-                      <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/cerulean/thumbnail.png" alt="Cerulean"/>
-                      <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_cerulean"/>
-                    </label>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <label>
-                      <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/cosmo/thumbnail.png" alt="Cosmo"/>
-                      <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_cosmo" data-disable="ee"/>
-                    </label>
-                  </td>
-                  <td>
-                    <label>
-                      <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/cyborg/thumbnail.png" alt="Cyborg"/>
-                      <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_cyborg"/>
-                    </label>
-                  </td>
-                  <td>
-                    <label>
-                      <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/flatly/thumbnail.png" alt="Flatly"/>
-                      <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_flatly"/>
-                    </label>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <label>
-                      <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/journal/thumbnail.png" alt="Journal"/>
-                      <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_journal"/>
-                    </label>
-                  </td>
-                  <td>
-                    <label>
-                      <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/readable/thumbnail.png" alt="Readable"/>
-                      <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_readable"/>
-                    </label>
-                  </td>
-                  <td>
-                    <label>
-                      <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/simplex/thumbnail.png" alt="Simplex"/>
-                      <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_simplex"/>
-                    </label>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <label>
-                      <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/slate/thumbnail.png" alt="Slate"/>
-                      <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_slate"/>
-                    </label>
-                  </td>
-                  <td>
-                    <label>
-                      <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/spacelab/thumbnail.png" alt="Spacelab"/>
-                      <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_spacelab"/>
-                    </label>
-                  </td>
-                  <td>
-                    <label>
-                      <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/united/thumbnail.png" alt="United"/>
-                      <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_united"/>
-                    </label>
-                  </td>
-                </tr>
-              </table>
+  <data>
+    <template id="theme_customize" inherit_id="website.theme_customize" name="theme_customize Bootswatch">
+      <xpath expr="div" position="replace">
+        <div id="theme_customize_modal" class="modal fade bs-example-modal-sm">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="loading_backdrop"/>
+              <div class="modal-header">
+                <button type="button" class="close">×</button>
+                <h4 class="modal-title">Customize your theme</h4>
+              </div>
+              <div class="modal-body">
+                <table>
+                  <tr>
+                    <td>
+                      <label class="checked">
+                        <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/img/bootswatch_default_thumbnail.png" alt="Default Theme"/>
+                        <input name="theme" type="radio" data-xmlid="" checked="checked"/>
+                      </label>
+                    </td>
+                    <td>
+                      <label>
+                        <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/amelia/thumbnail.png" alt="Amelia"/>
+                        <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_amelia"/>
+                      </label>
+                    </td>
+                    <td>
+                      <label>
+                        <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/cerulean/thumbnail.png" alt="Cerulean"/>
+                        <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_cerulean"/>
+                      </label>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <label>
+                        <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/cosmo/thumbnail.png" alt="Cosmo"/>
+                        <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_cosmo" data-disable="ee"/>
+                      </label>
+                    </td>
+                    <td>
+                      <label>
+                        <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/cyborg/thumbnail.png" alt="Cyborg"/>
+                        <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_cyborg"/>
+                      </label>
+                    </td>
+                    <td>
+                      <label>
+                        <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/flatly/thumbnail.png" alt="Flatly"/>
+                        <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_flatly"/>
+                      </label>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <label>
+                        <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/journal/thumbnail.png" alt="Journal"/>
+                        <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_journal"/>
+                      </label>
+                    </td>
+                    <td>
+                      <label>
+                        <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/readable/thumbnail.png" alt="Readable"/>
+                        <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_readable"/>
+                      </label>
+                    </td>
+                    <td>
+                      <label>
+                        <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/simplex/thumbnail.png" alt="Simplex"/>
+                        <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_simplex"/>
+                      </label>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <label>
+                        <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/slate/thumbnail.png" alt="Slate"/>
+                        <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_slate"/>
+                      </label>
+                    </td>
+                    <td>
+                      <label>
+                        <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/spacelab/thumbnail.png" alt="Spacelab"/>
+                        <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_spacelab"/>
+                      </label>
+                    </td>
+                    <td>
+                      <label>
+                        <img style="width: 120px; height: 70px;" src="/theme_bootswatch/static/src/less/united/thumbnail.png" alt="United"/>
+                        <input name="theme" type="radio" data-xmlid="theme_bootswatch.theme_united"/>
+                      </label>
+                    </td>
+                  </tr>
+                </table>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-    </xpath>
-</template>
-
-<!--
+      </xpath>
+    </template>
+    <!--
      All Default Themes
 -->
-
     <template id="theme_bootswatch.theme_amelia" name="Amelia" inherit_id="website.assets_frontend" active="False" customize_show="False">
-        <xpath expr="." position="inside">
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/amelia/bootswatch.less' t-ignore="true"/>
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/amelia/variables.less' t-ignore="true"/>
-            <link rel='stylesheet' href='/theme_bootswatch/static/src/less/amelia/fix.css' t-ignore="true"/>
-        </xpath>
+      <xpath expr="." position="inside">
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/amelia/bootswatch.less" t-ignore="true"/>
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/amelia/variables.less" t-ignore="true"/>
+        <link rel="stylesheet" href="/theme_bootswatch/static/src/less/amelia/fix.css" t-ignore="true"/>
+      </xpath>
     </template>
-
     <template id="theme_bootswatch.theme_cerulean" name="Cerulean" inherit_id="website.assets_frontend" active="False" customize_show="False">
-        <xpath expr="." position="inside">
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/cerulean/bootswatch.less' t-ignore="true"/>
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/cerulean/variables.less' t-ignore="true"/>
-        </xpath>
+      <xpath expr="." position="inside">
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/cerulean/bootswatch.less" t-ignore="true"/>
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/cerulean/variables.less" t-ignore="true"/>
+      </xpath>
     </template>
-
     <template id="theme_bootswatch.theme_cosmo" name="Cosmo" inherit_id="website.assets_frontend" active="False" customize_show="False">
-        <xpath expr="." position="inside">
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/cosmo/bootswatch.less' t-ignore="true"/>
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/cosmo/variables.less' t-ignore="true"/>
-            <link rel='stylesheet' href='/theme_bootswatch/static/src/less/cosmo/fix.css' t-ignore="true"/>
-        </xpath>
+      <xpath expr="." position="inside">
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/cosmo/bootswatch.less" t-ignore="true"/>
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/cosmo/variables.less" t-ignore="true"/>
+        <link rel="stylesheet" href="/theme_bootswatch/static/src/less/cosmo/fix.css" t-ignore="true"/>
+      </xpath>
     </template>
-
     <template id="theme_bootswatch.theme_cyborg" name="Cyborg" inherit_id="website.assets_frontend" active="False" customize_show="False">
-        <xpath expr="." position="inside">
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/cyborg/bootswatch.less' t-ignore="true"/>
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/cyborg/variables.less' t-ignore="true"/>
-            <link rel='stylesheet' href='/theme_bootswatch/static/src/less/cyborg/fix.css' t-ignore="true"/>
-        </xpath>
+      <xpath expr="." position="inside">
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/cyborg/bootswatch.less" t-ignore="true"/>
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/cyborg/variables.less" t-ignore="true"/>
+        <link rel="stylesheet" href="/theme_bootswatch/static/src/less/cyborg/fix.css" t-ignore="true"/>
+      </xpath>
     </template>
-
     <template id="theme_bootswatch.theme_flatly" name="Flatly" inherit_id="website.assets_frontend" active="False" customize_show="False">
-        <xpath expr="." position="inside">
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/flatly/bootswatch.less' t-ignore="true"/>
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/flatly/variables.less' t-ignore="true"/>
-            <link rel='stylesheet' href='/theme_bootswatch/static/src/less/flatly/fix.css' t-ignore="true"/>
-        </xpath>
+      <xpath expr="." position="inside">
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/flatly/bootswatch.less" t-ignore="true"/>
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/flatly/variables.less" t-ignore="true"/>
+        <link rel="stylesheet" href="/theme_bootswatch/static/src/less/flatly/fix.css" t-ignore="true"/>
+      </xpath>
     </template>
-
     <template id="theme_bootswatch.theme_journal" name="Journal" inherit_id="website.assets_frontend" active="False" customize_show="False">
-        <xpath expr="." position="inside">
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/journal/bootswatch.less' t-ignore="true"/>
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/journal/variables.less' t-ignore="true"/>
-            <link rel='stylesheet' href='/theme_bootswatch/static/src/less/journal/fix.css' t-ignore="true"/>
-        </xpath>
+      <xpath expr="." position="inside">
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/journal/bootswatch.less" t-ignore="true"/>
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/journal/variables.less" t-ignore="true"/>
+        <link rel="stylesheet" href="/theme_bootswatch/static/src/less/journal/fix.css" t-ignore="true"/>
+      </xpath>
     </template>
-
     <template id="theme_bootswatch.theme_readable" name="Readable" inherit_id="website.assets_frontend" active="False" customize_show="False">
-        <xpath expr="." position="inside">
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/readable/bootswatch.less' t-ignore="true"/>
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/readable/variables.less' t-ignore="true"/>
-            <link rel='stylesheet' href='/theme_bootswatch/static/src/less/readable/fix.css' t-ignore="true"/>
-        </xpath>
+      <xpath expr="." position="inside">
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/readable/bootswatch.less" t-ignore="true"/>
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/readable/variables.less" t-ignore="true"/>
+        <link rel="stylesheet" href="/theme_bootswatch/static/src/less/readable/fix.css" t-ignore="true"/>
+      </xpath>
     </template>
-
     <template id="theme_bootswatch.theme_simplex" name="Simplex" inherit_id="website.assets_frontend" active="False" customize_show="False">
-        <xpath expr="." position="inside">
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/simplex/bootswatch.less' t-ignore="true"/>
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/simplex/variables.less' t-ignore="true"/>
-            <link rel='stylesheet' href='/theme_bootswatch/static/src/less/simplex/fix.css' t-ignore="true"/>
-        </xpath>
+      <xpath expr="." position="inside">
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/simplex/bootswatch.less" t-ignore="true"/>
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/simplex/variables.less" t-ignore="true"/>
+        <link rel="stylesheet" href="/theme_bootswatch/static/src/less/simplex/fix.css" t-ignore="true"/>
+      </xpath>
     </template>
-
     <template id="theme_bootswatch.theme_slate" name="Slate" inherit_id="website.assets_frontend" active="False" customize_show="False">
-        <xpath expr="." position="inside">
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/slate/bootswatch.less' t-ignore="true"/>
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/slate/variables.less' t-ignore="true"/>
-            <link rel='stylesheet' href='/theme_bootswatch/static/src/less/slate/fix.css' t-ignore="true"/>
-        </xpath>
+      <xpath expr="." position="inside">
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/slate/bootswatch.less" t-ignore="true"/>
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/slate/variables.less" t-ignore="true"/>
+        <link rel="stylesheet" href="/theme_bootswatch/static/src/less/slate/fix.css" t-ignore="true"/>
+      </xpath>
     </template>
-
     <template id="theme_bootswatch.theme_spacelab" name="Spacelab" inherit_id="website.assets_frontend" active="False" customize_show="False">
-        <xpath expr="." position="inside">
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/spacelab/bootswatch.less' t-ignore="true"/>
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/spacelab/variables.less' t-ignore="true"/>
-            <link rel='stylesheet' href='/theme_bootswatch/static/src/less/spacelab/fix.css' t-ignore="true"/>
-        </xpath>
+      <xpath expr="." position="inside">
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/spacelab/bootswatch.less" t-ignore="true"/>
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/spacelab/variables.less" t-ignore="true"/>
+        <link rel="stylesheet" href="/theme_bootswatch/static/src/less/spacelab/fix.css" t-ignore="true"/>
+      </xpath>
     </template>
-
     <template id="theme_bootswatch.theme_united" name="United" inherit_id="website.assets_frontend" active="False" customize_show="False">
-        <xpath expr="." position="inside">
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/united/bootswatch.less' t-ignore="true"/>
-            <link rel="stylesheet" type="text/less" href='/theme_bootswatch/static/src/less/united/variables.less' t-ignore="true"/>
-        </xpath>
+      <xpath expr="." position="inside">
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/united/bootswatch.less" t-ignore="true"/>
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/united/variables.less" t-ignore="true"/>
+      </xpath>
     </template>
+    <!--template id="theme_bootswatch.theme_account_verify" name="Account verify" inherit_id="website_greenwood.account_verify">
+      <xpath expr="." position="inside">
+        <script src="/theme_bootswatch/static/src/js/bootstrap.min.js" type="text/javascript"/>
+        <script src="/theme_bootswatch/static/src/js/jquery.fileupload.js" type="text/javascript"/>
+      </xpath>
+    </template-->
+    <template id="theme_bootswatch.theme_styles" name="styles" inherit_id="website.assets_frontend">
+      <xpath expr="link[last()]" position="after">
+        <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/less/styles.less"/>
+      </xpath>
+    </template>
+    <template id="theme_bootswatch.fileupload_assets" name="fileupload">
+      <xpath expr="footer[1]" position="inside">
+        <script src="/theme_bootswatch/static/src/js/app.js" type="text/javascript"/>
+        <script src="/theme_bootswatch/static/src/js/jquery.ui.widget.js" type="text/javascript"/>
+        <script src="/theme_bootswatch/static/src/js/jquery.iframe-transport.js" type="text/javascript"/>
+      </xpath>
+    </template>
+    <template id="theme_bootswatch.account_verify" name="Account verify">
+      <t t-call="web.login_layout">
+        <xpath expr="." position="inside">
+          <!--script src="/theme_bootswatch/static/src/js/bootstrap.min.js" type="text/javascript"/-->
+          <script src="/theme_bootswatch/static/src/js/app.js" type="text/javascript"/>
+          <script src="/theme_bootswatch/static/src/js/jquery.ui.widget.js" type="text/javascript"/>
+          <script src="/theme_bootswatch/static/src/js/jquery.iframe-transport.js" type="text/javascript"/>
+          <script src="/theme_bootswatch/static/src/js/jquery.fileupload.js" type="text/javascript"/>
+        </xpath>
+        <h1>Profile Verification</h1>
+        <form role="form" t-attf-action="/profile/add{{ '?debug' if debug else '' }}" method="POST" enctype="multipart/form-data" onsubmit="this.action = this.action + location.hash">
+          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+          <div id="account_type" class="btn-group">
+            <label class="btn btn-default active"><input type="radio" name="company_type" value="person" checked="checked"/> Individual
+                </label>
+            <label class="btn btn-default"><input type="radio" name="company_type" value="company"/> Corporate
+                </label>
+          </div>
+          <div class="form-group field-bvn">
+            <label for="bvn" class="control-label">BVN</label>
+            <input type="text" name="bvn" t-att-value="bvn" id="bvn" class="form-control" required="required" autofocus="autofocus"/>
+        </div>
+        <div id="identity-wrapper">
+          <div class="form-group field-identity-id ind">
+            <label for="identity_id" class="control-label">Identity ID</label>
+            <input t-att-value="identity_id" class="form-control" required="required" id="identity_id" type="file" name="identity_id" data-url="/file/upload/identity_id" autofocus="autofocus"/>
+          </div>
+          <div id="spinner-identity"/>
+          <div id="identity-status" class="file-status"></div>
+      </div>
+          <div class="form-group field-empname ind">
+            <label for="empname" class="control-label">Employer name</label>
+            <input type="text" name="empname" t-att-value="empname" id="empname" class="form-control" required="required" autofocus="autofocus"/>
+          </div>
+          <div class="form-group field-companyname corp">
+            <label for="companyname" class="control-label">Company name</label>
+            <input type="text" name="companyname" t-att-value="companyname" id="companyname" class="form-control" required="required" autofocus="autofocus"/>
+          </div>
+          <div class="form-group field-mexpenses ind">
+            <label for="mexpenses" class="control-label">Total monthly expenses</label>
+            <input type="text" name="mexpenses" t-att-value="mexpenses" id="mexpenses" class="form-control" required="required" autofocus="autofocus"/>
+          </div>
+          <div class="form-group field-company-regid corp">
+            <label for="company_reg_id" class="control-label">Company Reg Id</label>
+            <input type="text" name="company_reg_id" t-att-value="company_reg_id" id="company_reg_id" class="form-control" required="required" autofocus="autofocus"/>
+          </div>
+          <div class="form-group field-address">
+            <label for="address" class="control-label">Address</label>
+            <input type="text" name="address" t-att-value="address" id="address" class="form-control" required="required" autofocus="autofocus"/>
+          </div>
+          <div class="form-group field-job-position">
+            <label for="job_position" class="control-label">Job position</label>
+            <input type="text" name="job_position" t-att-value="job_position" id="job_position" class="form-control" required="required" autofocus="autofocus"/>
+          </div>
+          <input type="hidden" name="cyear" t-att-value="cyear"/>
+          <t t-log="months_short"/>
+          <div class="form-group field-debit-date">
+              <label for="debit_date" class="control-label">Debit date</label>
+              <div style="display: inline-flex">
+              <select id="gw-mths-list" class="form-control" name="debit_date_month" required="required" autofocus="autofocus">
+                  <t t-foreach="months_short" t-as="item">
+                      <option t-att-value="item_value[0]"><t t-esc="item_value[1]"/></option>
+                    </t>
+                </select>
+                <select id="gw-days-list" class="form-control" name="debit_date_day" required="required" autofocus="autofocus">
+                    <t t-foreach="days" t-as="day">
+                        <option t-att-value="day_value"><t t-esc="day_value"/></option>
+                </t>
+                </select>
+            </div>
+          </div>
+          <div class="form-group field-payslips ind">
+            <label for="payslips" class="control-label">Latest payslips</label>
+            <input t-att-value="payslips" class="form-control" required="required" id="payslips" type="file" name="payslips" data-url="/files/upload/payslips" autofocus="autofocus" multiple="multiple"/>
+          </div>
+          <div id="spinner-payslips"/>
+          <div id="payslips-status" class="file-status"></div>
+          <div class="form-group field-tenancy ind">
+            <label for="tenancy" class="control-label">Tenancy Agreement</label>
+            <input t-att-value="tenancy" class="form-control" required="required" id="tenancy" type="file" name="tenancy" data-url="/file/upload" autofocus="autofocus"/>
+          </div>
+          <div id="spinner-tenancy"/>
+          <p class="alert alert-danger" t-if="error">
+            <t t-esc="error"/>
+          </p>
+          <p class="alert alert-success" t-if="message">
+            <t t-esc="message"/>
+          </p>
+          <input type="hidden" name="redirect" t-att-value="redirect"/>
+          <div class="clearfix oe_login_buttons">
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
+        </form>
+      </t>
+    </template>
+    <template id="theme_bootswatch.profile_edit_person" name="Profile edit person">
+      <t t-call="web.login_layout">
+        <xpath expr="." position="inside">
+          <script src="/theme_bootswatch/static/src/js/app.js" type="text/javascript"/>
+          <script src="/theme_bootswatch/static/src/js/jquery.ui.widget.js" type="text/javascript"/>
+          <script src="/theme_bootswatch/static/src/js/jquery.iframe-transport.js" type="text/javascript"/>
+          <script src="/theme_bootswatch/static/src/js/jquery.fileupload.js" type="text/javascript"/>
+        </xpath>
+        <h1>Edit Profile</h1>
+        <form role="form" t-attf-action="/profile/{{userid}}/edit" method="POST" enctype="multipart/form-data" onsubmit="this.action = this.action + location.hash">
+            <div class="form-group field-bvn">
+                <label for="bvn" class="control-label">BVN</label>
+                <input type="text" class="form-control" required="required" autofocus="autofocus" name="bvn" id="bvn" t-att-value="bvn"></input>
+            </div>
+            <div class="form-group field-empname">
+                <label for="empname" class="control-label">Employer</label>
+                <input type="text" name="empname" id="empname" class="form-control" t-att-value="empname" required="required" autofocus="autofocus"></input>
+            </div>
+            <div class="form-group field-mexpenses">
+                <label for="mexpenses" class="control-label">Total monthly expenses</label>
+                <input type="text" name="mexpenses" id="mexpenses" class="form-control" required="required" autofocus="autofocus" t-att-value="mexpenses"></input>
+            </div>
+            <div class="form-group field-address">
+                <label for="address" class="control-label">Address</label>
+                <input type="text" name="address" id="address" class="form-control" required="required" autofocus="autofocus" t-att-value="address"></input>
+            </div>
+            <div class="form-group field-job-position">
+                <label for="job_position" class="control-label">Job position</label>
+                <input type="text" name="job_position" id="job_position" class="form-control" t-att-value="job_position" required="required" autofocus="autofocus"></input>
+            </div>
+          <div class="clearfix oe_login_buttons">
+              <button type="submit" class="btn btn-primary">Update</button>
+          </div>
 
-</data>
+        </form>
+      </t>
+    </template>
+    <template id="theme_bootswatch.profile_edit_company" name="Profile edit corporate">
+      <t t-call="web.login_layout">
+        <xpath expr="." position="inside">
+          <script src="/theme_bootswatch/static/src/js/app.js" type="text/javascript"/>
+          <script src="/theme_bootswatch/static/src/js/jquery.ui.widget.js" type="text/javascript"/>
+          <script src="/theme_bootswatch/static/src/js/jquery.iframe-transport.js" type="text/javascript"/>
+          <script src="/theme_bootswatch/static/src/js/jquery.fileupload.js" type="text/javascript"/>
+        </xpath>
+        <h1>Edit Profile</h1>
+        <form role="form" t-attf-action="/profile/{{userid}}/edit" method="POST" enctype="multipart/form-data" onsubmit="this.action = this.action + location.hash">
+            <div class="form-group field-bvn">
+                <label for="bvn" class="control-label">BVN</label>
+                <input type="text" class="form-control" required="required" autofocus="autofocus" name="bvn" id="bvn" t-att-value="bvn"></input>
+            </div>
+            <div class="form-group field-companyname">
+                <label for="companyname" class="control-label">Company</label>
+                <input type="text" name="companyname" id="companyname" class="form-control" t-att-value="companyname" required="required" autofocus="autofocus"></input>
+            </div>
+            <div class="form-group field-company-regid corp">
+                <label for="company_reg_id" class="control-label">Company Reg Id</label>
+                <input type="text" name="company_reg_id" id="company_reg_id" class="form-control" required="required" autofocus="autofocus" t-att-value="company_reg_id"></input>
+            </div>
+            <div class="form-group field-address">
+                <label for="address" class="control-label">Address</label>
+                <input type="text" name="address" id="address" class="form-control" required="required" autofocus="autofocus" t-att-value="address"></input>
+            </div>
+            <div class="form-group field-job-position">
+                <label for="job_position" class="control-label">Job position</label>
+                <input type="text" name="job_position" id="job_position" class="form-control" t-att-value="job_position" required="required" autofocus="autofocus"></input>
+            </div>
+          <div class="clearfix oe_login_buttons">
+              <button type="submit" class="btn btn-primary">Update</button>
+          </div>
+        </form>
+      </t>
+    </template>
+    <template id="theme_bootswatch.profile" name="Profile">
+      <t t-call="web.login_layout">
+          <h1>Profile</h1>
+          <div id="corp-container">
+              <div class="gw-field-view" style="display: inline-block; min-height: 50px; max-height:120px">
+                  <label style="width: 200px">BVN</label>
+                  <span t-field="profile.bvn" t-field-options='{"widget": "text"}'></span>
+              </div>
+              <div class="gw-field-view" style="display: inline-block; min-height: 50px; max-height: 120px">
+                  <label style="width: 200px">Company name</label>
+                  <span t-field="profile.companyname" t-field-options='{"widget": "text"}'></span>
+              </div>
+              <div class="gw-field-view">
+                  <label>Address</label>
+                  <span t-field="profile.street" t-field-options='{"widget": "text"}'></span>
+              </div>
+              <div class="gw-field-view">
+                  <label>Phone</label>
+                  <span t-field="profile.phone" t-field-options='{"widget": "phone"}'></span>
+              </div>
+              <div class="gw-field-view">
+                  <label>Company Reg Id</label>
+                  <span t-field="profile.company_reg_id" t-field-options='{"widget": "text"}'></span>
+              </div>
+              <div class="gw-field-view">
+                  <label>Job Position</label>
+                  <span t-field="profile.function" t-field-options='{"widget": "text"}'></span>
+              </div>
+              <div class="gw-field-view">
+                  <label>Debit date</label>
+                  <span t-field="profile.debit_date" t-field-options='{"format": "Y-m-d"}'></span>
+              </div>
+          </div>
+      </t>
+    </template>
+  </data>
 </openerp>

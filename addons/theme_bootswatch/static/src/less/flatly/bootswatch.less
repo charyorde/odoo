@@ -263,3 +263,39 @@ input, {
 .popover {
   color: @text-color;
 }
+
+#spinner-identity, #spinner-payslips, #spinner-tenancy {
+    background: url('/theme_bootswatch/static/src/img/spiffygif_30x30.gif') no-repeat;
+    width: 50px;
+    height: 93px;
+    display: none;
+    background-position: center center;
+    float: right;
+}
+
+.field-identity-id, .field-payslips, .field-tenancy {
+    float: left    
+}
+
+#identity-wrapper {
+    overflow: auto;
+}
+#identity-status, #payslips-status {
+    display: none
+
+}
+
+.file-status {
+    margin-top: 5px;
+    height: auto;
+    border: solid 1px #333;
+}
+
+.gw-field-view {
+    display: inline-block;
+    min-height: 50px;
+    max-height: 120px
+}
+.gw-field-view label {
+    width: 200px    
+}

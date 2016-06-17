@@ -32,3 +32,9 @@ install/win32/meta.py
 /man/
 /share/
 /src/
+
+# bins
+*.zip
+
+# configs
+openerp-wsgi.py
