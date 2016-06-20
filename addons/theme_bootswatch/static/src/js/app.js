@@ -1,85 +1,29 @@
 odoo.define('website_greenwood.account', function(require) {
   // Commons to all gw modules
   var core = require('web.core');
+  //var Widget = require('web.Widget');
+  //var ProfileCreate = require('gw.profilecreate')
+  //new ProfileCreate(this).appendTo($(document.body));
 
-  var profile = {
+  //var GW = Widget.extend({})
+  GW = {}
+
+  GW.ProfileCreate = function() {
+    // @TODO On load, make sure swift is available before 
+    // begining file upload
+    this.$fileFields = $('.inputfile')
+    this.$fns = $('#gw_idfn, #gw_tncyfn, #gw_pyslpfn')
+    this.corp_fields = $('.corp')
+    this.ind_fields = $('.ind')
+    this.$spi = $('#spinner-identity')
+    this.$spt = $('#spinner-tenancy')
+    this.$spp = $('#spinner-payslips')
+    this.$submit = $('button[type="submit"')
+    this.idattachList = []
     
-    edit: function() {
+    var $spi = $('#spinner-identity')
+    var $spt = $('#spinner-tenancy')
     
-    },
-
-    displayFile: function(file, ele) {
-      template = '<b>' + file + '</b>'
-      $(ele).append(template).show('slow')
-    }
-  }
-
-  function ProfileCreate() {
-    
-    
-  }
-
-  var fileUploadHandler = function() {
-    console.log('fileUploadHandler')
-    var $spinner = $('#spinner-identity')
-    $('#identity_id').fileupload({
-      dataType: 'json',
-     done: function(e, data) {
-        console.log('upload completed', data)
-        $spinner.hide('slow')
-        // replace this input with a thumbnail of the image
-        profile.displayFile(data.files[0]['name'], '#identity-status')
-      
-      },
-      always: function(e, data) {
-        if (data.textStatus != 'success') {
-          // continue spinning 
-          $spinner.show('slow')
-        }
-        if (data.textStatus == 'error') {
-          $spinner.delay(10000).fadeOut();
-        }
-      },
-      fail: function(e, data) {
-        console.log(data)
-        if (data.textStatus == 'error' ) {
-          $("#identity-status").append('File attach failed. Please try again.').show().delay(5000).fadeOut();
-        }
-      }
-    })
-
-    $('#tenancy').fileupload({
-    
-    })
-
-  }
-
-  var filesUploadHandler = function() {
-    $('#payslips').fileupload({
-      dataType: 'json',
-      singleFileUploads: false,
-      done: function(e, data) {
-        console.log('upload completed', data)
-        $(data.files).each(function (index, file) {
-          console.log("file", file)
-          profile.displayFile(file.name, '#payslips-status')
-        });
-      
-      },
-      fail: function(e, data) {
-        console.log("Failed debug", data)
-
-      }
-    
-    })
-  
-  }
-
-  $(document).ready(function() {
-
-    fileUploadHandler();
-    filesUploadHandler();
-
     var $account_type = $('#account_type')
     var $ind_fields = $('div.ind')
     var $corp_fields = $('div.corp')
@@ -95,18 +39,14 @@ odoo.define('website_greenwood.account', function(require) {
     $account_type.find("input[value='person']").on('click', function(e) {
       $corp_fields.hide()
       $ind_fields.show()
-
     })
     $("#account_type input[value='company']").on('click', function(e) {
       $ind_fields.hide()
       $corp_fields.show()
-
-      // @todo exclude or disable all individual form fields when we're in corp view
-      
     })
 
-    $('div.oe_login_buttons > button[type="submit"]').on('click', function() {
-
+    this.$submit.click(function() {
+      alert('clicked')
       if ($("#account_type input:checked").val() == 'company') {
         console.log('removed person fields')
         $ind_fields.find('input').each(function(i, ele) { $(ele).removeAttr('required')})
@@ -114,9 +54,164 @@ odoo.define('website_greenwood.account', function(require) {
       }
       else if ($("#account_type input:checked") == 'person') {
         $corp_fields.remove();
+        // If this.idfile.props('files').length is < 1, inform user to upload files
+        // If this.tenancyfile.props('files').length is < 1, inform user to upload files
+        // If this.payslipsfile.props('files').length is < 1, inform user to upload files
       }
-      
     })
+   
+    var prepopulate = function(ele) {
+      console.log("ele", ele)
+      var file = $(ele).val().split(',')
+      if ($(ele).attr('id') == 'gw_idfn') {
+        setTimeout(function() {
+          displayFile(file, '#identity-status ul')
+          //msg = $('#identity_id').attr('data-gw-files').replace('{count}', file.length)
+          //$('#identity_id').next().find('span').html(msg)
+          setFileCount('#identity_id', file.length)
+        }, 3000)
+      }
+      if ($(ele).attr('id') == 'gw_tncyfn') {
+        displayFile(file, '#tenancy ul')
+        setFileCount('#tenancy', file.length)
+      }
+      if ($(ele).attr('id') == 'gw_pyslpfn') {
+        displayFile(file, '#payslips ul')
+        setFileCount('#payslips', file.length)
+      }
+    };
+
+    this.$fns.each(function(i, ele) {
+      console.log('val', $(ele).val())
+      if ($(ele).val()) {
+        prepopulate(ele)
+      }
+    });
+
+    this.idHandler = {
+      change: function(e, data) {
+        console.log('onchange')
+        msg = $(this).attr('data-gw-files').replace('{count}', data.files.length)
+        $(this).next().find('span').html(msg)
+      },
+
+      done: function(e, data) {
+        $spi.hide('slow')
+        displayFile([data.files[0]['name']], '#identity-status ul')
+        console.log("input value", $(this).prop('files'))
+        $('input[name="gw_idfn"]').val(data.files[0]['name'])
+        console.log("gw_idfn value", $('input[name="gw_idfn"]').val())
+      
+      },
+
+      always: function(e, data) {
+        control($spi, data)
+      },
+
+      fail: function(e, data) {
+        setStatus(ele, data.textStatus, 'File attach failed. Please try again.', 5000)
+      }
+    };
+   
+    $('#identity_id').fileupload(this.idHandler)
+
+    this.payslipsHandler = {
+      dataType: 'json',
+      singleFileUploads: false,
+      done: function(e, data) {
+        console.log('upload completed', data)
+        var filenames = []
+        $(data.files).each(function (index, file) {
+          console.log("file", file)
+          //displayFile(file.name, '#payslips-status ul')
+          filenames.push(file.name)
+        });
+          displayFile(filenames, '#payslips-status ul')
+        $('input[name="gw_pyslpfn"]').val(filenames.join(','))
+      },
+      fail: function(e, data) {
+        setStatus(ele, data.textStatus, 'File attach failed. Please try again.', 5000)
+      }
+    }
+
+    $('#payslips').fileupload(this.payslipsHandler)
+
+    this.tenancyHandler = {
+      dataType: 'json',
+      done: function(e, data) {
+        $spt.hide('slow')
+        displayFile([data.files[0]['name']], '#tenancy-status ul')
+        $('input[name="gw_tncyfn"]').val(data.files[0]['name'])
+      },
+      always: function(e, data) {
+        control($spi, data)
+      },
+      fail: function(e, data) {
+        setStatus(ele, data.textStatus, 'File attach failed. Please try again.', 5000)
+      }
+    }
+
+    $('#tenancy').fileupload(this.tenancyHandler)
+
+
+    var displayFile = function(file, ele) {
+      file.forEach(function(f) {
+        template = '<li>' + f + '</li>'
+        $(ele).append(template)
+      })
+      $(ele).parent().fadeIn()
+    }
+
+    var control = function(spinner, data) {
+      if (data.textStatus != 'success') {
+        // continue spinning 
+        spinner.show('slow')
+      }
+      if (data.textStatus == 'error') {
+        spinner.delay(10000).fadeOut();
+      }
+    
+    }
+
+    var setStatus = function(ele, textstatus, message, timeout) {
+      if (textstatus == 'error' ) {
+        ele.append(message).show().delay(timeout).fadeOut();
+      }
+    
+    }
+
+    var setFileCount = function(ele, size) {
+      msg = $(ele).attr('data-gw-files').replace('{count}', size)
+      $(ele).next().find('span').html(msg)
+    }
+
+    var removeAttachedFile = function(file) {
+    
+    }
+
+    var retrieveTempFile = function(file) {
+      // Retrieve temp file if form hasn't been submitted or a failed submit
+    }
+
+    /**
+     * @param ele array
+     */ 
+    var removeElement = function(ele) {
+      // Loop through each ele and remove from dom
+    }
+
+    var validate = function(form) {
+      alert('javascript validation called')
+      return false
+    }
+  }
+
+  GW.formValidate = function() {
+    console.log('formValidate')
+  }
+
+  $(document).ready(function() {
+    new GW.ProfileCreate()
   })
 
 })

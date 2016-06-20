@@ -3,6 +3,7 @@ import logging
 import json
 import tempfile
 from urlparse import urljoin
+import urllib2
 
 import openerp
 from openerp import http, SUPERUSER_ID
@@ -10,8 +11,10 @@ from openerp.http import request
 from openerp.addons.web.controllers.main import Home, ensure_db, Session
 from openerp.addons.website.controllers.main import Website
 from openerp.addons.website_sale.controllers.main import website_sale
-from openerp.addons.website_greenwood.main import Config, GWCalender
-from openerp.addons.website_greenwood.main import _datetime_from_string, _months_list, _days_number_list
+from openerp.addons.website_greenwood.main import Config, GWCalender, Swift
+from openerp.addons.website_greenwood.main import \
+    _datetime_from_string, _months_list, _days_number_list, \
+    SWIFT_GW_CONTAINER, SWIFT_GWTEMP_CONTAINER
 
 import werkzeug.utils
 from werkzeug.datastructures import ImmutableMultiDict
@@ -19,25 +22,13 @@ from werkzeug.datastructures import ImmutableMultiDict
 import swiftclient
 
 cal = GWCalender()
+config = Config()
 
 _logger = logging.getLogger(__name__)
 
 
 def swift():
-    config = Config()
     return config.swift()
-    # username = 'admin'
-    # password = 'admin'
-    # authurl = 'http://192.168.2.249:8080/auth/v1.0/'
-    # preauthurl = 'http://192.168.2.249:8080/v1/AUTH_admin/'
-    # preauthtoken = 'AUTH_tk6077f64e7fe14dc9bb69f20be778297c'
-    # swift = swiftclient.client.Connection(user=username,
-    #                                      key=password,
-    #                                      authurl=authurl,
-    #                                      preauthurl=preauthurl,
-    #                                      preauthtoken=preauthtoken,
-    #                                      retries=3)
-    # return swift
 
 def swift_headers():
     return {
@@ -51,11 +42,59 @@ def _swift_config():
                tempstorageurl='http://192.168.2.249:8080/v1/AUTH_admin/gwtemp')
 
 def _saveFile(ufile):
-    res = swift_upload(ufile, delete_file_from_temp)
+    filename = ufile.filename
+    filedata = ufile.read()
+    # res = swift_upload(ufile, delete_file_from_temp)
+    res = swift_upload(filename, filedata, delete_file_from_temp)
     if res:
         return dict(res)
     else:
         return None
+
+def _swift_request(fn):
+    """ Copies file from one Container into another """
+    obj_name = urllib2.quote(fn)
+    swift_params = config.get_swift_param('token', 'storageurl')
+    _logger.info("\n>>>> swift params %s" % swift_params)
+    source = SWIFT_GWTEMP_CONTAINER + '/%s' % obj_name
+    dest = SWIFT_GW_CONTAINER + '/%s' % obj_name
+    url = swift_params['storageurl'] + '/%s' % dest
+    headers = {
+        'X-Auth-Token': swift_params['token'],
+        'X-Copy-From': '/%s' % source,
+        'Content-Length': 0
+    }
+    _logger.info("\n>>>> headers %s" % headers)
+    _logger.info("\n>>>> url %s" % url)
+
+    request = urllib2.Request(url, None, headers)
+    request.get_method = lambda: 'PUT'
+    done, res = False, None
+    try:
+        res = urllib2.urlopen(request)
+        done = True
+    except urllib2.HTTPError as e:
+        res = e.read()
+        _logger.info(">>> swift error %r" % res)
+        e.close()
+        return None
+
+    result = res.read()
+    _logger.info("\n>>>> no exception result %s" % result)
+    res.close()
+    filepath = urljoin(swift_params['storageurl'], '/gw/%s' % obj_name)
+    _logger.info("\n>>>> return values %r" % [obj_name, filepath])
+    return obj_name, filepath
+
+def _save_files_perm(filenames):
+    res = []
+    for fn in filenames:
+        tup = _swift_request(fn)
+        if tup:
+            res.append(tup)
+        else:
+            return None
+    return dict(res)
 
 def swift_upload(fn, fd, cb=None):
     container, response, filename, filedata = 'gw', dict(), fn, fd
@@ -94,14 +133,13 @@ def delete_file_from_temp(filename):
         return None
 
 def _saveFiles(mapping, key):
-    print("Saving files>>>>>>>> %r" % mapping)
     """ :param mapping: Must be of type werkzeug.datastructures.MultiDict() """
     if type(mapping) != ImmutableMultiDict:
         raise NotImplementedError("Only mapping of type MultiDict is supported")
+
     files = mapping.getlist(key)
     res = []
     for f in files:
-        _logger.info("Got a file>>>>>>>> %r" % f)
         filename = f.filename
         filedata = f.read()
         # fn = swift_upload(f, cb=delete_file_from_temp)
@@ -114,6 +152,12 @@ def _saveFiles(mapping, key):
         else:
             return None
     return dict(res)
+
+def _validate_form_person():
+    pass
+
+def _validate_form_company():
+    pass
 
 
 class WebsiteGreenwood(http.Controller):
@@ -144,6 +188,8 @@ class WebsiteGreenwood(http.Controller):
         gw_account_obj = pool['res.partner']
         partner_id = gw_account_obj._get_partner_id(cr, SUPERUSER_ID, uid, context=context)
         profile = gw_account_obj.browse(cr, SUPERUSER_ID, partner_id, context=context)
+
+        verb = 'Update' if not profile.bvn else 'Edit'
         values = {
             'bvn': profile.bvn,
             'address': profile.street,
@@ -152,6 +198,7 @@ class WebsiteGreenwood(http.Controller):
             'phone': profile.phone,
             'debit_date': profile.debit_date,
             'profile': profile,
+            'verb': verb,
         }
         _logger.info(">>> values %r" % values)
         company_type = profile.company_type
@@ -165,17 +212,23 @@ class WebsiteGreenwood(http.Controller):
         else:
             values['companyname'] = profile.companyname
             values['company_reg_id'] = profile.company_reg_id
-            return request.render('theme_bootswatch.profile', values)
+            return request.render('theme_bootswatch.profile_company', values)
 
     @http.route('/profile/add', type='http', website=True, auth="user")
     def add(self, redirect=None, **kw):
         """ Add new profile """
         cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
-        # greenwood_account_obj = pool['website_greenwood.account']
         greenwood_account_obj = pool['res.partner']
         users = request.registry.get('res.users')
         res_partner_obj = pool.get('res.partner')
         redirect = request.params.get('redirect')
+        values = {
+            'uid': uid,
+            'cyear': cal.current_year(),
+            'months_short': _months_list('short'),
+            'days': _days_number_list(),
+        }
+
         if request.httprequest.method == 'POST':
             partner = users.browse(cr, SUPERUSER_ID, uid, context=context).partner_id
             params = request.params.copy()
@@ -183,6 +236,41 @@ class WebsiteGreenwood(http.Controller):
             params['uid'] = uid
             params['partner_id'] = partner.id
             account_type = request.params['company_type']
+            print "\n>>Request.files", request.httprequest.files
+            files = request.httprequest.files
+
+            values['company_type'] = account_type
+            values['bvn'] = params['bvn']
+            values['empname'] = params['empname']
+            values['mexpenses'] = params['mexpenses']
+            values['address'] = params['address']
+            values['job_position'] = params['job_position']
+            values['debit_date_month'] = params['debit_date_month']
+            values['debit_date_day'] = params['debit_date_day']
+            values['gw_idfn'] = params['gw_idfn']
+            values['gw_pyslpfn'] = params['gw_pyslpfn']
+            values['gw_tncyfn'] = params['gw_tncyfn']
+            values['companyname'] = params['companyname']
+            values['company_reg_id'] = params['company_reg_id']
+
+            # If account_type is individual and none of gw_* is set, send
+            # back error result
+            gw_idfn, gw_pyslpfn, gw_tncyfn = params['gw_idfn'] or False, params['gw_pyslpfn'] or False, params['gw_tncyfn'] or False
+            fileFields = [gw_idfn, gw_pyslpfn, gw_tncyfn]
+
+            nofile = False
+            for r in range(1, 4):
+                for f in fileFields:
+                    if f is False:
+                        nofile = True
+                        break
+                else:
+                    continue
+
+            if account_type == 'person' and nofile:
+                values['error'] = 'Please attach the required files'
+                return request.render('theme_bootswatch.account_verify', values)
+
             profile = self._create_profile(account_type, request, params)
 
             if profile:
@@ -192,20 +280,14 @@ class WebsiteGreenwood(http.Controller):
                 return http.redirect_with_hash(redirect)
             params['error'] = _('Some fields fail validation')
             return request.render('theme_bootswatch.account_verify', params)
-        values = {
-            'uid': uid,
-            'res_partner': res_partner_obj.browse(cr, SUPERUSER_ID, 44, context=context),
-            'greenwood_account': greenwood_account_obj,
-            'cyear': cal.current_year(),
-            'months_short': _months_list('short'),
-            'days': _days_number_list(),
-        }
-        print "\n\n>>>>res_partner\n", values['res_partner'].company_type
+
+        values['res_partner'] = res_partner_obj.browse(cr, SUPERUSER_ID, 44, context=context),
+        values['greenwood_account'] = greenwood_account_obj
+
         return request.render('theme_bootswatch.account_verify', values)
 
     def _create_profile(self, account_type, request, params):
         _logger.info("website_greenwood: Creating new profile")
-        print("\n>>>website_greenwood: Creating new profile")
         if account_type == 'person':
             return self.profile_individual(request, params)
         elif account_type == 'company':
@@ -221,15 +303,15 @@ class WebsiteGreenwood(http.Controller):
         debit_date = _datetime_from_string(idate)
 
         partner_id = params['partner_id']
-        identity_id = "%s" % _saveFile(request.params['identity_id'])
-        tenancy = "%s" % _saveFile(request.params['tenancy'])
-        payslips = "%s" % _saveFiles(request.params['payslips'])
+        identity_id = "%s" % _save_files_perm([params['gw_idfn']])
+        tenancy = "%s" % _save_files_perm([params['gw_tncyfn']])
+        payslips = "%s" % _save_files_perm([params['gw_pyslpfn']])
         approval_status = gw_account_obj.browse(cr, SUPERUSER_ID, partner_id, context=context).approval_status
 
         values = {
             'company_type': 'person',
             'bvn': request.params['bvn'],
-            'uid': uid,
+            'user_id': uid,
             'debit_date': debit_date,
             'empname': request.params['empname'],
             'companyname': 'None',
@@ -238,9 +320,10 @@ class WebsiteGreenwood(http.Controller):
             'payslips': payslips,
             'mexpenses': request.params['mexpenses'],
             'tenancy': tenancy,
-            'address': request.params['address'],
-            'job_position': request.params['job_position'],
+            'street': request.params['address'],
+            'function': request.params['job_position'],
             'approval_status': approval_status,
+            'notify_email': 'none',
         }
         return gw_account_obj.write(cr, SUPERUSER_ID, [partner_id], values, context=context)
 

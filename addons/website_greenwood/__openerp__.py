@@ -25,6 +25,7 @@
     'data': [
         # 'security/ir.model.access.csv',
         # 'data/greenwood_account.xml',
+        'views/res_partner.xml',
         'views/views.xml',
         'views/templates.xml',
     ],

@@ -9,6 +9,10 @@
     'data': [
         'views/theme.xml',
     ],
+    'js': ['static/src/js/profile.create.js'],
+    'qweb' : [
+        "static/src/xml/*.xml",
+    ],
     'images': ['static/description/bootswatch.png'],
     'application': False,
 }

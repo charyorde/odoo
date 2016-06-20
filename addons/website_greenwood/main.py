@@ -4,24 +4,31 @@ import time
 from openerp import fields
 
 import swiftclient
+SWIFT_GWTEMP_CONTAINER = 'gwtemp'
+SWIFT_GW_CONTAINER = 'gw'
 
 
 class Config():
-    def env(self):
-        env = 'local'
+    def __init__(self):
+        self.env = dict(name='local',
+                        swift_token='AUTH_tk4335e60e4f2d4429907fa487b695df01',
+                        swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin')
+
+    def _env(self):
+        env = self.env
         if os.environ.get('PLATFORM'):
-            env = 'PROD'
+            env = dict(name='PROD', swift_token='')
         elif os.environ.get('CLOUD'):
-            env = 'CLOUD'
+            env = dict(name='CLOUD', swift_token='')
         elif os.environ.get('DEV'):
-            env = 'dev'
+            env = dict(name='dev', swift_token='')
         else:
             env
         return env
 
     def swift(self):
-        env = self.env()
-        if env != 'local':
+        env = self._env()
+        if env['name'] != 'local':
             pass
         else:
             return self._swift_local()
@@ -31,7 +38,8 @@ class Config():
         password = 'admin'
         authurl = 'http://192.168.2.249:8080/auth/v1.0/'
         preauthurl = 'http://192.168.2.249:8080/v1/AUTH_admin'
-        preauthtoken = 'AUTH_tk9cc002cccbc541e49dc26fafd99cf5c1'
+        preauthtoken = self.env['swift_token']
+
         swift = swiftclient.client.Connection(user=username,
                                               key=password,
                                               authurl=authurl,
@@ -39,6 +47,43 @@ class Config():
                                               preauthtoken=preauthtoken,
                                               retries=3)
         return swift
+
+    def _swift_auth_token(self):
+        env = self._env()
+        if env['name'] != 'local':
+            pass
+        else:
+            return env['swift_token']
+
+
+    def _get_swift_storageurl(self):
+        env = self._env()
+        if env['name'] != 'local':
+            pass
+        else:
+            return env['swift_storageurl']
+
+    def get_swift_param(self, *arg):
+        param = dict()
+        if 'storageurl' in arg:
+            param['storageurl'] = self._get_swift_storageurl()
+        if 'tempcontainer' in arg:
+            param['gwtempcontainer'] = SWIFT_GWTEMP_CONTAINER
+        if 'gwcontainer' in arg:
+            param['gwcontainer'] = SWIFT_GW_CONTAINER
+        if 'token' in arg:
+            param['token'] = self._swift_auth_token()
+        return param
+
+
+class Swift():
+    def __init__(self):
+        self.config = Config()
+        pass
+
+    def object_url(self):
+        # get the env and return the respective url
+        pass
 
 
 import datetime

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
   <data noupdate="1">
-      <record model="website_greenwood.account" id="view_greenwood_account">
-          <field name="name">website_greenwood.account.form</field>
-          <field name="res_model">website_greenwood.account</field>
-          <field name="view_type">form</field>
+    <record model="ir.ui.view" id="view_greenwood_account">
+        <field name="name">Greenwood Profile</field>
+      <field name="res_model">res.partner</field>
+      <field name="view_type">tree,form</field>
     </record>
   </data>
 </openerp>
