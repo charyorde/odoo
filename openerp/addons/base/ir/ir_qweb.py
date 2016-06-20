@@ -439,10 +439,9 @@ class QWeb(orm.AbstractModel):
         d = qwebcontext.copy()
 
         if 'lang' in template_attributes:
-            init_lang = d.context.get('lang', 'en_US')
             lang = template_attributes['lang']
-            d.context['lang'] = self.eval(lang, d) or lang
-            if not self.pool['res.lang'].search(d.cr, d.uid, [('code', '=', lang)], count=True, context=d.context):
+            d.context = dict(d.context, lang=self.eval(lang, d) or lang)
+            if not self.pool['res.lang'].search(d.cr, d.uid, [('code', '=', d.context['lang'])], count=True, context=d.context):
                 _logger.info("'%s' is not a valid language code, is an empty field or is not installed, falling back to en_US", lang)
 
         d[0] = self.render_element(element, template_attributes, generated_attributes, d)
@@ -457,10 +456,6 @@ class QWeb(orm.AbstractModel):
 
         d['generated_attributes'] = generated_attributes
         res = self.render(cr, uid, template, d)
-
-        # we need to reset the lang after the rendering
-        if 'lang' in template_attributes:
-            d.context['lang'] = init_lang
 
         return res
 
@@ -1636,9 +1631,6 @@ class PreprocessedCSS(StylesheetAsset):
         self.html_url_format = '%%s/%s/%%s.css' % self.bundle.xmlid
         self.html_url_args = tuple(self.url.rsplit('/', 1))
 
-    def minify(self):
-        return self.with_header()
-
     def get_source(self):
         content = self.inline or self._fetch_content()
         return "/*! %s */\n%s" % (self.id, content)
@@ -1688,7 +1680,7 @@ class LessStylesheetAsset(PreprocessedCSS):
         except IOError:
             lessc = 'lessc'
         lesspath = get_resource_path('web', 'static', 'lib', 'bootstrap', 'less')
-        return [lessc, '-', '--clean-css', '--no-js', '--no-color', '--include-path=%s' % lesspath]
+        return [lessc, '-', '--no-js', '--no-color', '--include-path=%s' % lesspath]
 
 def rjsmin(script):
     """ Minify js with a clever regex.
