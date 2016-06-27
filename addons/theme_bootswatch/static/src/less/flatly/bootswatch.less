@@ -1,0 +1,381 @@
+// Flatly 3.2.0
+// Bootswatch
+// -----------------------------------------------------
+
+@import url("//fonts.googleapis.com/css?family=Lato:400,700,400italic");
+
+// Navbar =====================================================================
+
+.navbar {
+  border-width: 0;
+
+  &-default {
+
+    .badge {
+      background-color: #fff;
+      color: @navbar-default-bg;
+    }
+  }
+
+  &-inverse {
+
+    .badge {
+      background-color: #fff;
+      color: @navbar-inverse-bg;
+    }
+  }
+
+  &-brand {
+    padding: 18.5px 15px 20.5px;
+  }
+}
+
+// Buttons ====================================================================
+
+.btn:active {
+  .box-shadow(none);
+}
+
+.btn-group.open .dropdown-toggle {
+  .box-shadow(none);
+}
+
+// Typography =================================================================
+
+.text-primary,
+.text-primary:hover {
+  color: @brand-primary;
+}
+
+.text-success,
+.text-success:hover {
+  color: @brand-success;
+}
+
+.text-danger,
+.text-danger:hover {
+  color: @brand-danger;
+}
+
+.text-warning,
+.text-warning:hover {
+  color: @brand-warning;
+}
+
+.text-info,
+.text-info:hover {
+  color: @brand-info;
+}
+
+// Tables =====================================================================
+
+table,
+.table {
+
+  a:not(.btn) {
+    text-decoration: underline;
+  }
+
+  .success,
+  .warning,
+  .danger,
+  .info {
+    color: #fff;
+
+    a {
+      color: #fff;
+    }
+  }
+
+  > thead > tr > th,
+  > tbody > tr > th,
+  > tfoot > tr > th,
+  > thead > tr > td,
+  > tbody > tr > td,
+  > tfoot > tr > td {
+    border: none;
+  }
+
+  &-bordered > thead > tr > th,
+  &-bordered > tbody > tr > th,
+  &-bordered > tfoot > tr > th,
+  &-bordered > thead > tr > td,
+  &-bordered > tbody > tr > td,
+  &-bordered > tfoot > tr > td {
+    border: 1px solid @table-border-color;
+  }
+}
+
+// Forms ======================================================================
+
+.form-control,
+input, {
+  border-width: 2px;
+  .box-shadow(none);
+
+  &:focus {
+    .box-shadow(none);
+  }
+}
+
+.has-warning {
+  .help-block,
+  .control-label,
+  .radio,
+  .checkbox,
+  .radio-inline,
+  .checkbox-inline,
+  .form-control-feedback {
+    color: @brand-warning;
+  }
+
+  .form-control,
+  .form-control:focus {
+    border: 2px solid @brand-warning;
+  }
+
+  .input-group-addon {
+    border-color: @brand-warning;
+  }
+}
+
+.has-error {
+  .help-block,
+  .control-label,
+  .radio,
+  .checkbox,
+  .radio-inline,
+  .checkbox-inline,
+  .form-control-feedback {
+    color: @brand-danger;
+  }
+
+  .form-control,
+  .form-control:focus {
+    border: 2px solid @brand-danger;
+  }
+
+  .input-group-addon {
+    border-color: @brand-danger;
+  }
+}
+
+.has-success {
+  .help-block,
+  .control-label,
+  .radio,
+  .checkbox,
+  .radio-inline,
+  .checkbox-inline,
+  .form-control-feedback {
+    color: @brand-success;
+  }
+
+  .form-control,
+  .form-control:focus {
+    border: 2px solid @brand-success;
+  }
+
+  .input-group-addon {
+    border-color: @brand-success;
+  }
+}
+
+// Navs =======================================================================
+
+.nav {
+  .open > a,
+  .open > a:hover,
+  .open > a:focus {
+    border-color: transparent;
+  }
+}
+
+.pager {
+  a,
+  a:hover {
+    color: #fff;
+  }
+
+  .disabled {
+    &>a,
+    &>a:hover,
+    &>a:focus,
+    &>span {
+      background-color: @pagination-disabled-bg;
+    }
+  }
+}
+
+// Indicators =================================================================
+
+.close {
+  color: #fff;
+  text-decoration: none;
+  opacity: 0.4;
+
+  &:hover,
+  &:focus {
+    color: #fff;
+    opacity: 1;
+  }
+}
+
+.alert {
+
+  .alert-link {
+    color: #fff;
+    text-decoration: underline;
+  }
+}
+
+// Progress bars ==============================================================
+
+.progress {
+  height: 10px;
+  .box-shadow(none);
+  .progress-bar {
+    font-size: 10px;
+    line-height: 10px;
+  }
+}
+
+// Containers =================================================================
+
+.well {
+  .box-shadow(none);
+}
+
+.panel {
+  &-default {
+    .close {
+      color: @text-color;
+    }
+  }
+}
+
+.modal {
+  .close {
+    color: @text-color;
+  }
+}
+
+.popover {
+  color: @text-color;
+}
+
+#spinner-identity, #spinner-payslips, #spinner-tenancy {
+    background: url('/theme_bootswatch/static/src/img/spiffygif_30x30.gif') no-repeat;
+    width: 50px;
+    height: 36px;
+    display: none;
+    background-position: center center;
+    float: right;
+}
+
+.field-identity-id, .field-payslips, .field-tenancy {
+    float: left    
+}
+
+#identity-wrapper, .clearfix {
+    overflow: auto;
+}
+#identity-status, #payslips-status, #tenancy-status {
+    display: none
+
+}
+
+.file-status {
+    margin: 30px 0 10px 0;
+    max-height: 100px;
+    border: solid 1px #f4f2f2;
+    min-height: 33px;
+    padding: 5px;
+    clear: left;
+    background-color: #fcfcfc;
+    color: #bcbcbc;
+}
+
+.gw-field-view {
+    display: inline-block;
+    min-height: 50px;
+    max-height: 120px
+}
+
+.gw-field-view label {
+    width: 200px    
+}
+
+.inputfile {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+}
+
+.inputfile + label {
+    /*max-width: 80%;*/
+    font-size: 1.25rem;
+    /* 20px */
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    display: inline-block;
+    overflow: hidden;
+    padding: 0.625rem 1.25rem;
+    /* 10px 20px */
+}
+
+.no-js .inputfile + label {
+    display: none;
+}
+
+.inputfile:focus + label,
+.inputfile.has-focus + label {
+    outline: 1px dotted #000;
+    outline: -webkit-focus-ring-color auto 5px;
+}
+
+.inputfile + label * {
+    /* pointer-events: none; */
+    /* in case of FastClick lib use */
+}
+
+.inputfile + label svg {
+    width: 1em;
+    height: 1em;
+    vertical-align: middle;
+    fill: currentColor;
+    margin-top: -0.25em;
+    /* 4px */
+    margin-right: 0.25em;
+    /* 4px */
+}
+
+
+/* style 1 */
+
+.inputfile-1 + label {
+    color: #fff;
+    background-color: #18BC9C;
+}
+
+.inputfile-1:focus + label,
+.inputfile-1.has-focus + label,
+.inputfile-1 + label:hover {
+    background-color: #722040;
+}
+
+.inputfiles + label {
+    color: #d3394c;
+    border: 2px solid currentColor;
+}
+
+.inputfiles:focus + label,
+.inputfiles.has-focus + label,
+.inputfiles + label:hover {
+    color: #722040;
+}

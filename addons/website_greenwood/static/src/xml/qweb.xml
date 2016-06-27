@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="GWProductPromoImage">
+        <div id="gw-d-wrapper">
+        <div class="field-identity-id">
+            <input t-att-value="promo_image" class="inputfile inputfile-1" id="promo_image" type="file" t-attr-name="promo_image" data-url="/file/upload/promo_image/web" data-gw-files="{count} file(s) attached" autofocus="autofocus"/>
+            <label for="promo_image"><span>Attach a file</span></label>
+        </div>
+        <div id="spinner"/>
+        <div id="promo-image-status" class="file-status"><ul></ul></div>
+        <input type="hidden" id="gw_promofn" name="gw_promofn" t-att-value="gw_promofn"/>
+        <input type="hidden" id="gw_pid" name="gw_pid" t-att-value="gw_pid"/>
+        </div>
+    </t>
+</templates>

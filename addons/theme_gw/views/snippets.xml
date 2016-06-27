@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<openerp>
+    <data>
+        <template id="snippet_newsletter_optin">
+            <section id="mailing-list">
+                <div class="container">
+                    <h3>Join our mailing list</h3>
+
+                <form class="form-inline">
+
+                    <div class="form-group">
+                    <label class="sr-only">Name</label>
+                    <input  type="text" class="form-control" placeholder="Name"/>
+                    </div>
+
+                    <div class=" form-group">
+                    <label class="sr-only">Email</label>
+                    <input  type="email" class="form-control" required="" placeholder="Email"/>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-md">JOIN</button>
+                </form>
+                </div>
+            </section>
+        </template>
+        <template id="newsletter_optin" inherit_id="website.snippets">
+            <xpath expr="//div[@id='snippet_structure']" position="inside">
+                <t t-snippet="theme_gw.snippet_newsletter_optin"
+                t-thumbnail="/theme_gw/static/src/img/mailing-list-backdrop.png"/>
+            </xpath>
+
+        </template>
+    </data>
+</openerp>
