@@ -39,9 +39,9 @@ class res_partner(models.Model):
     # Job position
     # job_position = fields.Char(string="Job Position", required=True)
 
-    # A Greenwood account can be in pending, suspended, denied
+    # A Greenwood account can be in unchecked, pending, suspended, denied
     # or accepted state
-    approval_status = fields.Char(default='pending',required=True)
+    approval_status = fields.Char(default='unchecked',required=True)
 
     def create_debit_date(self, v):
         pass
@@ -104,4 +104,8 @@ class res_partner(models.Model):
         partner = self.pool['res.users'].browse(cr, uid, id, context=context).partner_id
         return partner.id
 
-
+    @api.model
+    def _find_partner_by_userid(self, uid):
+        user_obj = self.env['res.users']
+        partner = user_obj.browse(int(uid)).partner_id
+        return partner

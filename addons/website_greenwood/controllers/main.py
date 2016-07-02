@@ -8,6 +8,7 @@ import urllib2
 import openerp
 from openerp import http, SUPERUSER_ID
 from openerp.http import request
+from openerp.tools.translate import _
 from openerp.addons.web.controllers.main import Home, ensure_db, Session
 from openerp.addons.website.controllers.main import Website
 from openerp.addons.website_sale.controllers.main import website_sale
@@ -213,11 +214,11 @@ class WebsiteGreenwood(http.Controller):
             values['payslips'] = profile.payslips
             values['mexpenses'] = profile.mexpenses
             values['tenancy'] = profile.tenancy
-            return request.render('theme_bootswatch.profile', values)
+            return request.render('theme_gw.profile', values)
         else:
             values['companyname'] = profile.companyname
             values['company_reg_id'] = profile.company_reg_id
-            return request.render('theme_bootswatch.profile_company', values)
+            return request.render('theme_gw.profile_company', values)
 
     @http.route('/profile/add', type='http', website=True, auth="user")
     def add(self, redirect=None, **kw):
@@ -274,22 +275,25 @@ class WebsiteGreenwood(http.Controller):
 
             if account_type == 'person' and nofile:
                 values['error'] = 'Please attach the required files'
-                return request.render('theme_bootswatch.account_verify', values)
+                return request.render('theme_gw.account_verify', values)
 
             profile = self._create_profile(account_type, request, params)
 
             if profile:
                 _logger.info("\n>>> Profile written successfully")
+                qs = request.httprequest.query_string
+                if 'redirect=' in qs:
+                    redirect = qs.split('=')[1]
                 if not redirect:
                     redirect = '/profile'
                 return http.redirect_with_hash(redirect)
             params['error'] = _('Some fields fail validation')
-            return request.render('theme_bootswatch.account_verify', params)
+            return request.render('theme_gw.account_verify', params)
 
         values['res_partner'] = res_partner_obj.browse(cr, SUPERUSER_ID, 44, context=context),
         values['greenwood_account'] = greenwood_account_obj
 
-        return request.render('theme_bootswatch.account_verify', values)
+        return request.render('theme_gw.account_verify', values)
 
     def _create_profile(self, account_type, request, params):
         _logger.info("website_greenwood: Creating new profile")
@@ -321,15 +325,17 @@ class WebsiteGreenwood(http.Controller):
             'empname': request.params['empname'],
             'companyname': 'None',
             'identity_id': identity_id,
+            'phone': params['phone'],
             'company_reg_id': 'None',
             'payslips': payslips,
             'mexpenses': request.params['mexpenses'],
             'tenancy': tenancy,
             'street': request.params['address'],
             'function': request.params['job_position'],
-            'approval_status': approval_status,
+            'approval_status': 'pending',
             'notify_email': 'none',
         }
+        request.session.credit_status = 'pending'
         return gw_account_obj.write(cr, SUPERUSER_ID, [partner_id], values, context=context)
 
     def profile_corporate(self, request, params):
@@ -356,6 +362,7 @@ class WebsiteGreenwood(http.Controller):
             'companyname': request.params['companyname'],
             'identity_id': 'None',
             'company_reg_id': request.params['company_reg_id'],
+            'phone': params['phone'],
             'payslips': 'None',
             'mexpenses': float(0.0),
             'tenancy': 'None',
@@ -364,10 +371,11 @@ class WebsiteGreenwood(http.Controller):
             #'job_position': request.params['job_position'],
             'function': request.params['job_position'],
             # 'approval_status': greenwood_account_obj.credit_status([uid]),
-            'approval_status': approval_status,
+            'approval_status': 'pending',
             'is_company': 't',
             'notify_email': 'none',
         }
+        request.session.credit_status = 'pending'
         return greenwood_account_obj.write(cr, SUPERUSER_ID, [partner_id], values, context=context)
         # return greenwood_account_obj.create(cr, uid, values, context=context)
 
@@ -405,11 +413,11 @@ class WebsiteGreenwood(http.Controller):
             values['payslips'] = profile.payslips
             values['mexpenses'] = profile.mexpenses
             values['tenancy'] = profile.tenancy
-            return request.render('theme_bootswatch.profile_edit_person', values)
+            return request.render('theme_gw.profile_edit_person', values)
         else:
             values['companyname'] = profile.companyname
             values['company_reg_id'] = profile.company_reg_id
-            return request.render('theme_bootswatch.profile_edit_company', values)
+            return request.render('theme_gw.profile_edit_company', values)
 
 
 class GreenwoodOrderController(website_sale):
@@ -430,13 +438,198 @@ class GreenwoodOrderController(website_sale):
     @http.route()
     def checkout(self, **post):
         cstatuses = ['pending', 'accepted']
+        _logger.info("User credit status %s" % request.session.credit_status)
         if request.session.uid and request.session.credit_status not in cstatuses:
             redirect = '?redirect=%s' % request.httprequest.path
             return werkzeug.utils.redirect('/profile/add{0}'.format(redirect))
-        else:
+        elif not request.session.uid:
             return werkzeug.utils.redirect('/web/login', 303)
-            # return super(GreenwoodOrderController, self).checkout(post=post)
+        else:
+            return super(GreenwoodOrderController, self).checkout(post=post)
 
+    @http.route()
+    def payment(self, **post):
+        """ Payment step. This page proposes several payment means based on available
+        payment.acquirer. State at this point :
+
+         - a draft sale order with lines; otherwise, clean context / session and
+           back to the shop
+         - no transaction in context / session, or only a draft one, if the customer
+           did go to a payment.acquirer website but closed the tab without
+           paying / canceling
+        """
+        cr, uid, context = request.cr, request.uid, request.context
+        payment_obj = request.registry.get('payment.acquirer')
+        sale_order_obj = request.registry.get('sale.order')
+
+        order = request.website.sale_get_order(context=context)
+
+        redirection = self.checkout_redirection(order)
+        if redirection:
+            return redirection
+
+        shipping_partner_id = False
+        if order:
+            if order.partner_shipping_id.id:
+                shipping_partner_id = order.partner_shipping_id.id
+            else:
+                shipping_partner_id = order.partner_invoice_id.id
+
+        values = {
+            'order': request.registry['sale.order'].browse(cr, SUPERUSER_ID, order.id, context=context)
+        }
+        values['errors'] = sale_order_obj._get_errors(cr, uid, order, context=context)
+        values.update(sale_order_obj._get_website_data(cr, uid, order, context))
+
+        if not values['errors']:
+            acquirer_ids = payment_obj.search(cr, SUPERUSER_ID, [('website_published', '=', True), ('company_id', '=', order.company_id.id)], context=context)
+            values['acquirers'] = list(payment_obj.browse(cr, uid, acquirer_ids, context=context))
+            render_ctx = dict(context, submit_class='btn btn-primary', submit_txt=_('Pay Now'))
+            for acquirer in values['acquirers']:
+                acquirer.button = payment_obj.render(
+                    cr, SUPERUSER_ID, acquirer.id,
+                    '/',
+                    order.amount_total,
+                    order.pricelist_id.currency_id.id,
+                    partner_id=shipping_partner_id,
+                    tx_values={
+                        'return_url': '/shop/payment/validate',
+                    },
+                    context=render_ctx)
+        values['cyear'] = cal.current_year()
+
+        order_line = order.website_order_line
+        product = order_line.product_id
+        categ_name = product.categ_id.name
+        _logger.info("categ name %s" % categ_name)
+        if categ_name not in ['Monthly Payments', '6 Month Prepayment']:
+            values['should_pay_now'] = True
+        else:
+            values['should_pay_now'] = False
+
+        return request.website.render("website_sale.payment", values)
+
+    @http.route()
+    def payment_transaction(self, acquirer_id):
+        """ Json method that creates a payment.transaction, used to create a
+        transaction when the user clicks on 'pay now' button. After having
+        created the transaction, the event continues and the user is redirected
+        to the acquirer website.
+
+        :param int acquirer_id: id of a payment.acquirer record. If not set the
+                                user is redirected to the checkout page
+        """
+        cr, uid, context = request.cr, request.uid, request.context
+        payment_obj = request.registry.get('payment.acquirer')
+        transaction_obj = request.registry.get('payment.transaction')
+        order = request.website.sale_get_order(context=context)
+
+        if not order or not order.order_line or acquirer_id is None:
+            return request.redirect("/shop/checkout")
+
+        assert order.partner_id.id != request.website.partner_id.id
+
+        # find an already existing transaction
+        tx = request.website.sale_get_transaction()
+        if tx:
+            tx_id = tx.id
+            if tx.sale_order_id.id != order.id or tx.state in ['error', 'cancel'] or tx.acquirer_id.id != acquirer_id:
+                tx = False
+                tx_id = False
+            elif tx.state == 'draft':  # button cliked but no more info -> rewrite on tx or create a new one ?
+                tx.write(dict(transaction_obj.on_change_partner_id(cr, SUPERUSER_ID, None, order.partner_id.id, context=context).get('values', {}), amount=order.amount_total))
+        if not tx:
+            tx_id = transaction_obj.create(cr, SUPERUSER_ID, {
+                'acquirer_id': acquirer_id,
+                'type': 'form',
+                'amount': order.amount_total,
+                'currency_id': order.pricelist_id.currency_id.id,
+                'partner_id': order.partner_id.id,
+                'partner_country_id': order.partner_id.country_id.id,
+                'reference': request.env['payment.transaction'].get_next_reference(order.name),
+                'sale_order_id': order.id,
+            }, context=context)
+            request.session['sale_transaction_id'] = tx_id
+            tx = transaction_obj.browse(cr, SUPERUSER_ID, tx_id, context=context)
+
+        # update quotation
+        request.registry['sale.order'].write(
+            cr, SUPERUSER_ID, [order.id], {
+                'payment_acquirer_id': acquirer_id,
+                'payment_tx_id': request.session['sale_transaction_id']
+            }, context=context)
+
+        return payment_obj.render(
+            cr, SUPERUSER_ID, tx.acquirer_id.id,
+            tx.reference,
+            order.amount_total,
+            order.pricelist_id.currency_id.id,
+            tx_id=tx.id,
+            partner_id=order.partner_shipping_id.id or order.partner_invoice_id.id,
+            tx_values={
+                'tx': tx,
+                'tx_id': tx.id,
+                'return_url': '/shop/payment/validate',
+            },
+            context=dict(context, submit_class='btn btn-primary', submit_txt=_('Pay Now')))
+
+    @http.route()
+    def payment_validate(self, transaction_id=None, sale_order_id=None, **post):
+        """ Method that should be called by the server when receiving an update
+        for a transaction. State at this point :
+        """
+        cr, uid, context = request.cr, request.uid, request.context
+        email_act = None
+        sale_order_obj = request.registry['sale.order']
+
+        # @TODO - Create contract for this sale order
+        # Attach this sale order to the contract
+        # Get this Sale order invoice and attach it to the contract
+        gw_payment = request.registry['greenpay.payment']
+        # save the user payment details in gw_account model
+        _logger.info("payment post %r" % post)
+
+        if transaction_id is None:
+            tx = request.website.sale_get_transaction()
+        else:
+            tx = request.registry['payment.transaction'].browse(cr, uid, transaction_id, context=context)
+
+        if sale_order_id is None:
+            order = request.website.sale_get_order(context=context)
+        else:
+            order = request.registry['sale.order'].browse(cr, SUPERUSER_ID, sale_order_id, context=context)
+            assert order.id == request.session.get('sale_last_order_id')
+
+        if not order:
+            return request.redirect('/shop')
+
+        _logger.info("order object %r" % order)
+        acquirer = request.registry['payment.acquirer'].browse(cr, SUPERUSER_ID, order.payment_acquirer_id, context=context)
+        _logger.info("acquirer object %s, %r" % (acquirer.name, acquirer))
+
+        vals = {
+            'card_number': post['card_number'],
+            'expiry': int('%d%d' % (int(post['expiry_month']), int(post['expiry_year']))),
+            'cvv': post['cvv'],
+            'pin': post['pin'],
+            'acquirer': 'interswitch',
+        }
+        gw_payment.create(cr, SUPERUSER_ID, vals, context=context)
+        # if (not order.amount_total and not tx) or tx.state in ['pending', 'done']:
+            # if (not order.amount_total and not tx):
+                # Orders are confirmed by payment transactions, but there is none for free orders,
+                # (e.g. free events), so confirm immediately
+                # order.with_context(dict(context, send_email=True)).action_button_confirm()
+        # elif tx and tx.state == 'cancel':
+            # cancel the quotation
+            # sale_order_obj.action_cancel(cr, SUPERUSER_ID, [order.id], context=request.context)
+
+        # clean context and session, then redirect to the confirmation page
+        request.website.sale_reset(context=context)
+        # if tx and tx.state == 'draft':
+        #    return request.redirect('/shop')
+
+        return request.redirect('/shop/confirmation')
 
 # class GreenwoodSession(Session):
 #    @http.route('/web/session/logout', auth='none', type='http')
@@ -477,9 +670,13 @@ class GreenwoodWebLogin(Website):
     @http.route(website=True, auth='public')
     def web_login(self, redirect=None, *args, **kw):
         r = super(GreenwoodWebLogin, self).web_login(redirect=redirect, *args, **kw)
-        # Get website_greenwood model for this user
-        # get user's credit status
+        cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
+        # Get website_greenwood oodel for this user
+        users = request.registry.get('res.users')
+        res_partner_obj = pool.get('res.partner')
+        partner = users.browse(cr, SUPERUSER_ID, uid, context=context).partner_id
         # set request.session.credit_status
+        request.session.credit_status = partner.approval_status
         if not redirect and request.session.uid:
             _logger.info(">>> No redirect")
             if request.registry['res.users'].has_group(request.cr, request.session.uid, 'base.group_user'):
@@ -493,6 +690,7 @@ class GreenwoodWebLogin(Website):
             if request.registry['res.users'].has_group(request.cr, request.session.uid, 'base.group_user'):
                 redirect = redirect
             else:
+                _logger.info("User credit status %s" % request.session.credit_status)
                 redirect = '/'
             return http.redirect_with_hash(redirect)
         return r

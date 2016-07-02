@@ -12,7 +12,12 @@ GW.ProfileCreate = function() {
   this.$spt = $('#spinner-tenancy')
   this.$spp = $('#spinner-payslips')
   this.$submit = $('button[type="submit"')
+  this.$idstatus = $('#identity-status')
+  this.$pysstatus = $('#payslips-status')
+  this.$tncystatus = $('#tenancy-status')
   this.idattachList = []
+
+  var self = this
   
   var $spi = $('#spinner-identity')
   var $spt = $('#spinner-tenancy')
@@ -38,8 +43,10 @@ GW.ProfileCreate = function() {
     $corp_fields.show()
   })
 
-  this.$submit.click(function() {
-    alert('clicked')
+  this.$submit.click(function(ev) {
+    //alert('clicked')
+    ev.preventDefault(); // prevent submit until we validate
+    ev.stopPropagation();
     if ($("#account_type input:checked").val() == 'company') {
       console.log('removed person fields')
       $ind_fields.find('input').each(function(i, ele) { $(ele).removeAttr('required')})
@@ -51,6 +58,7 @@ GW.ProfileCreate = function() {
       // If this.tenancyfile.props('files').length is < 1, inform user to upload files
       // If this.payslipsfile.props('files').length is < 1, inform user to upload files
     }
+    var $form = $(ev.currentTarget).parents('form');
   })
   
   var prepopulate = function(ele) {
@@ -102,7 +110,7 @@ GW.ProfileCreate = function() {
     },
 
     fail: function(e, data) {
-      setStatus(ele, data.textStatus, 'File attach failed. Please try again.', 5000)
+      setStatus(self.$idstatus, data.textStatus, 'File attach failed. Please try again.', 5000)
     }
   };
   
@@ -123,7 +131,7 @@ GW.ProfileCreate = function() {
       $('input[name="gw_pyslpfn"]').val(filenames.join(','))
     },
     fail: function(e, data) {
-      setStatus(ele, data.textStatus, 'File attach failed. Please try again.', 5000)
+      setStatus(self.$pysstatus, data.textStatus, 'File attach failed. Please try again.', 5000)
     }
   }
 
@@ -140,7 +148,7 @@ GW.ProfileCreate = function() {
       control($spi, data)
     },
     fail: function(e, data) {
-      setStatus(ele, data.textStatus, 'File attach failed. Please try again.', 5000)
+      setStatus(self.$tncystatus, data.textStatus, 'File attach failed. Please try again.', 5000)
     }
   }
 
@@ -208,10 +216,24 @@ GW.Sale = function() {
   this.$order_total = $('table#cart_total th > h3')[1]
   this.$order_taxes_lbl = $('table#cart_total td')[0]
   this.$order_taxes = $('table#cart_total td')[1]
+  this.acquirer_id = $('.oe_sale_acquirer_button[data-id]').val()
+  
+  var self = this
+
   if(this.cart.length > 0) {
     $('.rightSidebar .sidebar-body p').html(this.$order_taxes_lbl.innerHTML + this.$order_taxes.innerHTML)
     $('.rightSidebar .sidebar-footer span').html(this.$order_total.innerHTML)
   }
+  
+  //$('#gw-payment .a-submit').off('click').on('click', function () {
+    // Make an rpc call
+    // This rpc endpoint should change based on the acquirer_id
+    //openerp.jsonRpc("/shop/payment/transaction/" + self.acquirer_id, 'call', {})
+    //.then(function(res) {
+      // If all is not well, set error message, return false
+    //})
+    //$(this).closest('form').submit();
+  //});
 }
 
 $(document).ready(function() {

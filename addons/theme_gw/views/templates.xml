@@ -2,179 +2,856 @@
 <openerp>
   <data>
     <template id="lean" name="Lean" inherit_id="website.assets_frontend">
-        <xpath expr="script[last()]" position="after">
-            <link rel="stylesheet" type="text/css" href="/theme_gw/static/src/css/lean.css"/>
-            <link rel="stylesheet" href="/theme_gw/static/src/css/lean.fix.css"/>
-            <script src="/theme_gw/static/src/js/app.js" type="text/javascript"/>
-            <script src="/theme_gw/static/src/js/jquery.ui.widget.js" type="text/javascript"/>
-            <script src="/theme_gw/static/src/js/jquery.iframe-transport.js" type="text/javascript"/>
-            <script src="/theme_gw/static/src/js/jquery.fileupload.js" type="text/javascript"/>
-
-        </xpath>
+      <xpath expr="script[last()]" position="after">
+        <link rel="stylesheet" type="text/css" href="/theme_gw/static/src/css/lean.css"/>
+        <link rel="stylesheet" href="/theme_gw/static/src/css/lean.fix.css"/>
+        <script src="/theme_gw/static/src/js/app.js" type="text/javascript"/>
+        <script src="/theme_gw/static/src/js/jquery.ui.widget.js" type="text/javascript"/>
+        <script src="/theme_gw/static/src/js/jquery.iframe-transport.js" type="text/javascript"/>
+        <script src="/theme_gw/static/src/js/jquery.fileupload.js" type="text/javascript"/>
+      </xpath>
     </template>
     <template id="layout" inherit_id="website.layout">
-        <xpath expr="//*[@id='wrapwrap']/header/div[@class='navbar navbar-default navbar-static-top']" position="replace">
-            <div class="navbar navbar-default navbar-static-top">
-                <div class="container oe_website_sale">
-                    <div class="row">
-                        <div class="navbar-header col-sm-4">
-                            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-top-collapse">
-                                <span class="sr-only">Toggle navigation</span>
-                                <span class="icon-bar"></span>
-                                <span class="icon-bar"></span>
-                                <span class="icon-bar"></span>
-                            </button>
-                            <!--a class="navbar-brand" href="/" t-field="res_company.name"/-->
-                            <a href="/" class="navbar-brand logo">
-                                <img src="/theme_gw/static/src/img/logo.png" t-att-alt="'Logo of %s' % res_company.name" t-att-title="res_company.name"/>
-                            </a>
-                        </div>
-                        <div class="search-header col-sm-4">
-                            <form action="/shop" method="get" class="pagination form-inline col-md-3">
-                                <!--form t-att-action="QueryURL('/shop'+ ('/category/'+slug(category)) if category else '', search=0)" method="get" t-att-class="search_class"-->
-                                <div class="input-group">
-                                    <input type="text" name="search" class="search-query form-control" placeholder="Search..." t-att-value="search"/>
-                                    <span class="input-group-btn">
-                                        <a class="btn btn-default a-submit"><i class="fa fa-search"/></a>
-                                    </span>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="collapse navbar-collapse navbar-top-collapse col-sm-4">
-                            <ul class="nav navbar-nav navbar-right" id="top_menu">
-                                <t t-foreach="website.menu_id.child_id" t-as="submenu">
-                                    <t t-call="website.submenu"/>
-                                </t>
-                                <li class="divider" t-ignore="true" t-if="website.user_id != user_id"/>
-                                <li class="dropdown" t-ignore="true" t-if="website.user_id != user_id">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                        <b>
-                                            <span t-esc="user_id.name"/>
-                                            <span class="caret"></span>
-                                        </b>
-                                    </a>
-                                    <ul class="dropdown-menu js_usermenu" role="menu">
-                                        <li><a href="/web" role="menuitem">My Account</a></li>
-                                        <li class="divider"/>
-                                        <li><a t-attf-href="/web/session/logout?redirect=/" role="menuitem">Logout</a></li>
-                                    </ul>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+      <xpath expr="//*[@id='wrapwrap']/header/div[@class='navbar navbar-default navbar-static-top']" position="replace">
+        <div class="navbar navbar-default navbar-static-top">
+          <div class="container oe_website_sale">
+            <div class="row">
+              <div class="navbar-header col-sm-4">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-top-collapse">
+                  <span class="sr-only">Toggle navigation</span>
+                  <span class="icon-bar"/>
+                  <span class="icon-bar"/>
+                  <span class="icon-bar"/>
+                </button>
+                <!--a class="navbar-brand" href="/" t-field="res_company.name"/-->
+                <a href="/" class="navbar-brand logo">
+                  <img src="/theme_gw/static/src/img/logo.png" t-att-alt="'Logo of %s' % res_company.name" t-att-title="res_company.name"/>
+                </a>
+              </div>
+              <div class="search-header col-sm-4">
+                <form action="/shop" method="get" class="pagination form-inline col-md-3">
+                  <!--form t-att-action="QueryURL('/shop'+ ('/category/'+slug(category)) if category else '', search=0)" method="get" t-att-class="search_class"-->
+                  <div class="input-group">
+                    <input type="text" name="search" class="search-query form-control" placeholder="Search..." t-att-value="search"/>
+                    <span class="input-group-btn">
+                      <a class="btn btn-default a-submit">
+                        <i class="fa fa-search"/>
+                      </a>
+                    </span>
+                  </div>
+                </form>
+              </div>
+              <div class="collapse navbar-collapse navbar-top-collapse col-sm-4">
+                <ul class="nav navbar-nav navbar-right" id="top_menu">
+                  <t t-foreach="website.menu_id.child_id" t-as="submenu">
+                    <t t-call="website.submenu"/>
+                  </t>
+                  <li class="divider" t-ignore="true" t-if="website.user_id != user_id"/>
+                  <li class="dropdown" t-ignore="true" t-if="website.user_id != user_id">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                      <b>
+                        <span t-esc="user_id.name"/>
+                        <span class="caret"/>
+                      </b>
+                    </a>
+                    <ul class="dropdown-menu js_usermenu" role="menu">
+                      <li>
+                        <a href="/web" role="menuitem">My Account</a>
+                      </li>
+                      <li class="divider"/>
+                      <li>
+                        <a t-attf-href="/web/session/logout?redirect=/" role="menuitem">Logout</a>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
             </div>
-        </xpath>
+          </div>
+        </div>
+      </xpath>
     </template>
     <template id="products" inherit_id="website_sale.products">
-        <xpath expr="//div[@class='products_pager']" position="replace">
-            <div class="row" style="width: 100%; padding-top: 30px"></div>
-        </xpath>
+      <xpath expr="//div[@class='products_pager']" position="replace">
+        <div class="row" style="width: 100%; padding-top: 30px"/>
+      </xpath>
     </template>
-
     <template id="product" inherit_id="website_sale.product">
-        <xpath expr="//section[@id='product_detail']//div[@class='col-sm-3']" position="replace">
+      <xpath expr="//section[@id='product_detail']//div[@class='col-sm-3']" position="replace">
         </xpath>
     </template>
-
     <template id="cart" inherit_id="website_sale.cart">
-        <xpath expr="//div[@class='container oe_website_sale']" position="replace">
-            <div class="container oe_website_sale">
-
-            <ul class="wizard pull-right">
-                <li class="text-primary">Review Order<span class="chevron"></span></li>
-                <li class="text-muted">Shipping &amp; Billing<span class="chevron"></span></li>
-                <li class="text-muted">Payment<span class="chevron"></span></li>
-                <li class="text-muted">Confirmation<span class="chevron"></span></li>
-            </ul>
-            <h3 class="mb32">Your Basket</h3>
-            <div class="row">
-                <div class="col-md-8 col-sm-9 oe_cart">
-                    <t t-set="website_sale_order" t-value="website.sale_get_order()"/>
-                    <div t-if="not website_sale_order or not website_sale_order.website_order_line" class="well well-lg">
+      <xpath expr="//div[@class='container oe_website_sale']" position="replace">
+        <div class="container oe_website_sale">
+          <!--ul class="wizard pull-right">
+            <li class="text-primary">Review Order<span class="chevron"/></li>
+            <li class="text-muted">Shipping &amp; Billing<span class="chevron"/></li>
+            <li class="text-muted">Payment<span class="chevron"/></li>
+            <li class="text-muted">Confirmation<span class="chevron"/></li>
+          </ul-->
+          <h3 class="mb32">Your Basket</h3>
+          <div class="row">
+            <div class="col-md-8 col-sm-9 oe_cart">
+              <t t-set="website_sale_order" t-value="website.sale_get_order()"/>
+              <div t-if="not website_sale_order or not website_sale_order.website_order_line" class="well well-lg">
                         Your cart is empty!
                     </div>
-                    <table class='table table-striped table-condensed' id="cart_products" t-if="website_sale_order and website_sale_order.website_order_line">
-                        <tbody>
-                            <t t-foreach="website_sale_order.website_order_line" t-as="line">
-                            <tr>
-                                <td colspan="2" t-if="not line.product_id.product_tmpl_id"></td>
-                                <td width="130" t-if="line.product_id.product_tmpl_id">
-                                    <span t-field="line.product_id.image_medium"
-                                            t-field-options='{"widget": "image", "class": "img-rounded"}'/>
-                                </td>
-                                <td t-if="line.product_id.product_tmpl_id">
-                                    <div>
-                                        <a t-attf-href="/shop/product/#{ slug(line.product_id.product_tmpl_id) }">
-                                            <h4 t-esc="line.product_id.with_context(display_default_code=False).display_name"/>
-                                        </a>
-                                    </div>
-                                    <div class="text-muted" t-esc="'\n'.join(line.name.splitlines()[1:])"/>
-                                    <div class="cart-price">
-                                        <del class="text-danger" t-att-style="'' if line.product_id.lst_price &gt; line.discounted_price else 'display: none;'" style="text-decoration: line-through; white-space: nowrap;"
-                                            t-field="line.product_id.lst_price" t-field-options='{
-                                                "widget": "monetary",
-                                                "from_currency": "line.company_id.currency_id",
-                                                "display_currency": "user_id.partner_id.property_product_pricelist.currency_id"
-                                            }'/>&amp;nbsp;
-                                        <span class="text-muted price-lbl">Price</span><span t-field="line.discounted_price" style="white-space: nowrap;" t-field-options='{
-                                            "widget": "monetary",
-                                            "from_currency": "website_sale_order.pricelist_id.currency_id",
-                                            "display_currency": "user_id.partner_id.property_product_pricelist.currency_id"
-                                        }'/>
-                                    
-                                    </div>
-                                </td>
-                            </tr>
-                            </t>
-                        </tbody>
-                    </table>
-                    <t t-call="website_sale.total"/>
-                    <div class="clearfix"/>
-
-
-                    <div class="oe_structure"/>
+              <table class="table table-striped table-condensed" id="cart_products" t-if="website_sale_order and website_sale_order.website_order_line">
+                <tbody>
+                  <t t-foreach="website_sale_order.website_order_line" t-as="line">
+                    <tr>
+                      <td colspan="2" t-if="not line.product_id.product_tmpl_id"/>
+                      <td width="130" t-if="line.product_id.product_tmpl_id">
+                        <span t-field="line.product_id.image_medium" t-field-options="{&quot;widget&quot;: &quot;image&quot;, &quot;class&quot;: &quot;img-rounded&quot;}"/>
+                      </td>
+                      <td t-if="line.product_id.product_tmpl_id">
+                        <div>
+                          <a t-attf-href="/shop/product/#{ slug(line.product_id.product_tmpl_id) }">
+                            <h4 t-esc="line.product_id.with_context(display_default_code=False).display_name"/>
+                          </a>
+                        </div>
+                        <div class="text-muted" t-esc="'\n'.join(line.name.splitlines()[1:])"/>
+                        <div class="cart-price"><del class="text-danger" t-att-style="'' if line.product_id.lst_price &gt; line.discounted_price else 'display: none;'" style="text-decoration: line-through; white-space: nowrap;" t-field="line.product_id.lst_price" t-field-options="{                                                 &quot;widget&quot;: &quot;monetary&quot;,                                                 &quot;from_currency&quot;: &quot;line.company_id.currency_id&quot;,                                                 &quot;display_currency&quot;: &quot;user_id.partner_id.property_product_pricelist.currency_id&quot;                                             }"/>&amp;nbsp;
+                                        <span class="text-muted price-lbl">Price</span><span t-field="line.discounted_price" style="white-space: nowrap;" t-field-options="{                                             &quot;widget&quot;: &quot;monetary&quot;,                                             &quot;from_currency&quot;: &quot;website_sale_order.pricelist_id.currency_id&quot;,                                             &quot;display_currency&quot;: &quot;user_id.partner_id.property_product_pricelist.currency_id&quot;                                         }"/></div>
+                      </td>
+                    </tr>
+                  </t>
+                </tbody>
+              </table>
+              <t t-call="website_sale.total"/>
+              <div class="clearfix"/>
+              <div class="oe_structure"/>
+            </div>
+            <div class="col-lg-3 col-lg-offset-1 col-sm-3 col-md-3 text-muted" id="right_column">
+              <div class="rightSidebar">
+                <div class="sidebar">
+                  <div class="sidebar-header">
+                    <h4>Your Order</h4>
+                  </div>
+                  <div class="sidebar-body">
+                    <p>
+                      <span class="pull-right" style="white-space: nowrap;"/>
+                    </p>
+                  </div>
+                  <div class="sidebar-footer">
+                    <p class="green-text">TOTAL <span class="pull-right"/></p>
+                  </div>
                 </div>
-                <div class="col-lg-3 col-lg-offset-1 col-sm-3 col-md-3 text-muted" id="right_column">
-                    <div class="rightSidebar">
-                        <div class="sidebar">
-                            <div class="sidebar-header">
-                                <h4>Your Order</h4>
-                            </div>
-                            <div class="sidebar-body">
-                                <p><span class="pull-right" style="white-space: nowrap;"></span></p>
-                            </div>
+              </div>
+              <a t-if="not optional_products and website_sale_order and website_sale_order.website_order_line" href="/shop/checkout" class="btn btn-greenwood-outline btn-md" aria-expanded="false">Checkout</a>
+              <p class="continue-shopping">
+                <a href="/shop">Continue Shopping</a>
+              </p>
+              <h4>Policies</h4>
+              <ul class="list-unstyled mb32">
+                <li>☑ 30-days money-back guarantee</li>
+                <li>☑ Invoice sent by e-Mail</li>
+              </ul>
+              <h4>Secure Payment</h4>
+              <ul class="list-unstyled mb32">
+                <li>☑ 256 bit encryption</li>
+                <li>☑ Processed by Ogone</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="oe_structure"/>
+      </xpath>
+    </template>
+    <template id="total" inherit_id="website_sale.total">
+      <xpath expr="//table[@id='cart_total']" position="attributes">
+        <attribute name="class">visible-xs-inline</attribute>
+      </xpath>
+    </template>
+    
+    <!-- /shop/checkout -->
+    <template id="checkout" inherit_id="website_sale.checkout">
+        <xpath expr="//div[@class='container oe_website_sale']" position="replace">
+            <div class="container oe_website_sale">
+                <div class="col-xs-12 col-sm-12 col-md-8 col-lg-8" style="padding-top: 30px">
 
-                            <div class="sidebar-footer">
-                                <p class="green-text">TOTAL <span class="pull-right"></span></p>
+                    <div class="step-navigation ">
+                        <div class="row">
+                            <div class="col-xs-6 col-sm-6 col-md-3">
+                                    <span class="round-tab">
+                                        1
+                                    </span>
+                                    <p>Review Order</p>
+                            </div>
+                            <div class="col-xs-6 col-sm-6 col-md-3 activestep">
+                                    <span class="round-tab">
+                                        2
+                                    </span>
+                                    <p>Billing/Shipping</p>
+                            </div>
+                            <div class="col-xs-6 col-sm-6 col-md-3">
+                                    <span class="round-tab">
+                                        3
+                                    </span>
+                                    <p>Payment</p>
+                            </div>
+                            <div class="col-xs-6 col-sm-6 col-md-3">
+                                    <span class="round-tab">
+                                        4
+                                    </span>
+                                    <p>Confirmation</p>
                             </div>
                         </div>
                     </div>
-                    <a t-if="not optional_products and website_sale_order and website_sale_order.website_order_line" href="/shop/checkout" class="btn btn-greenwood-outline btn-md" aria-expanded="false">Checkout</a>
-                    <p class="continue-shopping"><a href="/shop">Continue Shopping</a></p>
 
-                    <h4>Policies</h4>
-                    <ul class="list-unstyled mb32">
-                        <li>&#9745; 30-days money-back guarantee</li>
-                        <li>&#9745; Invoice sent by e-Mail</li>
-                    </ul>
-                    <h4>Secure Payment</h4>
-                    <ul class="list-unstyled mb32">
-                        <li>&#9745; 256 bit encryption</li>
-                        <li>&#9745; Processed by Ogone</li>
-                    </ul>
-                </div>
-            </div>
+                    <div class="container-content-main clearfix ">
+                        <div class="content-header">
+                        <h4>Billing information</h4>
+                        </div>
+                        <div class="content-body">
+                            <form action="/shop/confirm_order" class="billing-info" method="post">
 
+                                <div t-attf-class="form-group row #{error.get('name') and 'has-error' or ''} ">
+                                    <label for="contact_name" class="col-sm-4 form-control-label right-align">Name</label>
+                                    <div class="col-sm-7">
+                                        <input type="text" name="name" class="form-control" t-att-value="checkout.get('name')"/>
+                                    </div>
+                                </div>
+
+                                <div t-attf-class="form-group row #{error.get('street') and 'has-error' or ''} ">
+                                    <label for="street" class="col-sm-4 form-control-label right-align">Street Address</label>
+                                    <div class="col-sm-7">
+                                        <input type="text" name="street" class="form-control" t-att-value="checkout.get('street')"/>
+                                    </div>
+                                </div>
+                                <div t-attf-class="form-group row #{error.get('street2') and 'has-error' or ''} ">
+                                    <label for="street2" class="col-sm-4 form-control-label right-align">Street Address 2</label>
+                                    <div class="col-sm-7">
+                                        <input type="text" name="street2" class="form-control" t-att-value="checkout.get('street2')"/>
+                                    </div>
+                                </div>
+
+                                <div t-attf-class="form-group row #{error.get('email') and 'has-error' or ''} ">
+                                    <label class="col-sm-4 control-label right-align" for="email">Email</label>
+                                    <div class="col-sm-7">
+                                        <input type="email" name="email" class="form-control" t-att-value="checkout.get('email')"/>
+                                    </div>
+                                </div>
+
+                                <div t-attf-class="form-group row #{error.get('phone') and 'has-error' or ''} ">
+                                    <label class="col-sm-4 control-label right-align" for="phone">Phone</label>
+                                    <div class="col-sm-7">
+                                        <input type="tel" name="phone" class="form-control" t-att-value="checkout.get('phone')"/>
+                                    </div>
+                                </div>
+
+                                <div t-attf-class="form-group row #{error.get('city') and 'has-error' or ''} ">
+                                    <label class="col-sm-4 control-label right-align" for="city">City</label>
+                                    <div class="col-sm-7">
+                                        <input type="text" name="city" class="form-control" t-att-value="checkout.get('city')"/>
+                                    </div>
+                                </div>
+
+                                <div t-attf-class="form-group row #{error.get('zip') and 'has-error' or ''} ">
+                                    <label class="col-sm-4 control-label right-align" for="zip" style="font-weight: normal">Zip / Postal Code</label>
+                                    <div class="col-sm-7">
+                                        <input type="text" name="zip" class="form-control" t-att-value="checkout.get('zip')"/>
+                                    </div>
+                                </div>
+                                <div t-attf-class="form-group row #{error.get('country_id') and 'has-error' or ''}">
+                                    <label class="col-sm-4 form-control-label right-align" for="country_id">Country</label>
+                                    <div class="col-sm-7">
+                                        <select name="country_id" class="form-control">
+                                            <option value="">Country...</option>
+                                            <t t-foreach="countries or []" t-as="country">
+                                            <option t-att-value="country.id" t-att-selected="country.id == checkout.get('country_id')">
+                                                <t t-esc="country.name"/>
+                                            </option>
+                                            </t>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div t-attf-class="form-group row #{error.get('state_id') and 'has-error' or ''}">
+                                    <label class="col-sm-4 form-control-label right-align" for="state_id" style="font-weight: normal">State / Province</label>
+                                    <div class="col-sm-7">
+                                        <select name="state_id" class="form-control">
+                                            <option value="">select...</option>
+                                            <t t-foreach="states or []" t-as="state">
+                                            <option t-att-value="state.id" style="display:none;" t-att-data-country_id="state.country_id.id" t-att-selected="state.id == checkout.get('state_id')">
+                                                <t t-esc="state.name"/>
+                                            </option>
+                                            </t>
+                                        </select>
+                                    </div>
+                                </div>
+                    
+                                <!--div class="form-group row">
+                                    <label class="col-sm-4"></label>
+                                    <div class="col-sm-7">
+                                        <div class="checkbox">
+                                            <label>
+                                                <input type="checkbox"> Billing Address is same as shipping</input>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div-->
+
+                                <div class="form-group col-lg-12">
+                                <label>Shipping</label>
+                                <select name="shipping_id" class="form-control">
+                                    <option value="0">Ship to the same address</option>
+                                    <t t-foreach="shippings" t-as="shipping">
+                                    <option t-att-value="shipping.id" t-att-selected="shipping.id == shipping_id" t-att-data-shipping_name="shipping.name" t-att-data-shipping_phone="shipping.phone" t-att-data-shipping_street="shipping.street" t-att-data-shipping_city="shipping.city" t-att-data-shipping_zip="shipping.zip" t-att-data-shipping_state_id="shipping.state_id and shipping.state_id.id" t-att-data-shipping_country_id="shipping.country_id and shipping.country_id.id">
+                                        <t t-esc="', '.join('\n'.join(shipping.name_get()[0][1].split(',')).split('\n')[1:])"/>
+                                    </option>
+                                    </t>
+                                    <option value="-1" t-att-selected="error and len(error) &gt; 0 and shipping_id == -1">-- Create a new address --</option>
+                                </select>
+                                </div>
+
+                                <div class="js_shipping row mb16" t-att-style="not shipping_id and 'display:none' or ''">
+                                    <div style="color: #55A43A; padding: 15px">
+                                        <h4 class="oe_shipping col-lg-12 mt16">Shipping Information</h4>
+                                    </div>
+                                    <div t-attf-class="form-group row #{error.get('shipping_name') and 'has-error' or ''}">
+                                        <label class="col-sm-4 form-control-label right-align" for="shipping_name">Name (Shipping)</label>
+                                        <div class="col-sm-7">
+                                            <input type="text" name="shipping_name" class="form-control" t-att-value="checkout.get('shipping_name', '')" t-att-readonly="'readonly' if shipping_id &gt;= 0 else ''"/>
+                                        </div>
+                                    </div>
+                                    <div t-attf-class="form-group row #{error.get('shipping_phone') and 'has-error' or ''}">
+                                        <label class="col-sm-4 form-control-label right-align" for="shipping_phone">Phone</label>
+                                        <div class="col-sm-7">
+                                            <input type="tel" name="shipping_phone" class="form-control" t-att-value="checkout.get('shipping_phone', '')" t-att-readonly="  'readonly' if shipping_id &gt;= 0 else ''"/>
+                                        </div>
+                                    </div>
+                                    <div t-attf-class="form-group row #{error.get('shipping_street') and 'has-error' or ''}">
+                                        <label class="col-sm-4 form-control-label right-align" for="shipping_street">Street</label>
+                                        <div class="col-sm-7">
+                                            <input type="text" name="shipping_street" class="form-control" t-att-value="checkout.get('shipping_street', '')" t-att-readonly=" 'readonly' if shipping_id &gt;= 0 else ''"/>
+                                        </div>
+                                    </div>
+                                    <div class="clearfix"/>
+                                    <div t-attf-class="form-group row #{error.get('shipping_city') and 'has-error' or ''}">
+                                        <label class="col-sm-4 form-control-label right-align" for="shipping_city">City</label>
+                                        <div class="col-sm-7">
+                                            <input type="text" name="shipping_city" class="form-control" t-att-value="checkout.get('shipping_city', '')" t-att-readonly=" 'readonly' if shipping_id &gt;= 0 else ''"/>
+                                        </div>
+                                    </div>
+                                    <div t-attf-class="form-group row #{error.get('shipping_zip') and 'has-error' or ''}">
+                                        <label class="col-sm-4 form-control-label right-align" for="shipping_zip" style="font-weight: normal">Zip / Postal Code</label>
+                                        <div class="col-sm-7">
+                                            <input type="text" name="shipping_zip" class="form-control" t-att-value="checkout.get('shipping_zip', '')" t-att-readonly=" 'readonly' if shipping_id &gt;= 0 else ''"/>
+                                        </div>
+                                    </div>
+                                    <div t-attf-class="form-group row #{error.get('shipping_country_id') and 'has-error' or ''}">
+                                        <label class="col-sm-4 form-control-label right-align" for="shipping_country_id">Country</label>
+                                        <div class="col-sm-7">
+                                            <select name="shipping_country_id" class="form-control" t-att-disabled="  'disabled' if shipping_id &gt;= 0 else ''">
+                                                <option value="">Country...</option>
+                                                <t t-foreach="countries or []" t-as="country">
+                                                <option t-att-value="country.id" t-att-selected="country.id == checkout.get('shipping_country_id')">
+                                                    <t t-esc="country.name"/>
+                                                </option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div t-attf-class="form-group row #{error.get('shipping_state_id') and 'has-error' or ''}">
+                                        <label class="col-sm-4 form-control-label right-align" for="shipping_state_id" style="font-weight: normal">State / Province</label>
+                                        <div class="col-sm-7">
+                                            <select name="shipping_state_id" class="form-control" t-att-disabled="  'disabled' if shipping_id &gt;= 0 else ''">
+                                                <option value="">State / Province...</option>
+                                                <t t-foreach="states or []" t-as="state">
+                                                <option t-att-value="state.id" style="display:none;" t-att-data-country_id="state.country_id.id" t-att-selected="state.id == checkout.get('shipping_state_id')">
+                                                    <t t-esc="state.name"/>
+                                                </option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <div class="col-sm-offset-4 col-sm-7">
+                                        <!--button type="submit" class="btn btn-primary a-submit">Complete My Order</button-->
+                                        <a class="btn btn-primary a-submit">Complete My Order</a>
+                                    </div>
+                                </div>
+
+
+                            </form>
+
+
+                        </div>
+
+                        <div class="content-footer">
+
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-sm-12 col-md-4 col-lg-4" style="padding-top: 30px">
+                        <div class="rightSidebar">
+                            <t t-set="website_sale_order" t-value="website.sale_get_order()"/>
+                            <div class="sidebar">
+                                <div class="sidebar-header">
+                                    <h4>Your Order</h4>
+                                </div>
+                                <div class="sidebar-body">
+                                    <p>Subtotal:
+                                        <span class="pull-right" style="white-space: nowrap;" t-field="website_sale_order.amount_untaxed" t-field-options="{                       &quot;widget&quot;: &quot;monetary&quot;,                       &quot;from_currency&quot;: &quot;website_sale_order.pricelist_id.currency_id&quot;,                       &quot;display_currency&quot;: &quot;user_id.partner_id.property_product_pricelist.currency_id&quot;                   }"/>
+                                    </p>
+                                    <p>Taxes:
+                                        <span class="pull-right" style="white-space: nowrap;" t-field="website_sale_order.amount_tax" t-field-options="{                       &quot;widget&quot;: &quot;monetary&quot;,                       &quot;from_currency&quot;: &quot;website_sale_order.pricelist_id.currency_id&quot;,                       &quot;display_currency&quot;: &quot;user_id.partner_id.property_product_pricelist.currency_id&quot;                   }"/>
+                                    
+                                    </p>
+                                </div>
+
+                                <div class="sidebar-footer">
+                                    <p class="green-text">TOTAL:
+                                        <span class="pull-right" style="white-space: nowrap;" t-field="website_sale_order.amount_total" t-field-options="{                       &quot;widget&quot;: &quot;monetary&quot;,                       &quot;from_currency&quot;: &quot;website_sale_order.pricelist_id.currency_id&quot;,                       &quot;display_currency&quot;: &quot;user_id.partner_id.property_product_pricelist.currency_id&quot;                   }"/>
+                                    </p>
+                                </div>
+                            </div>
+                            </div>
+                            <button class="btn btn-greenwood-outline btn-md " type="button"   aria-expanded="false">
+                                <span><a href="/shop/cart">Edit Cart</a></span>
+                            </button>
+
+                            <p class="continue-shopping"><a href="/shop">Continue Shopping</a></p>
+                        </div>
             </div>
-            <div class="oe_structure"/>
         </xpath>
     </template>
 
-    <template id="total" inherit_id="website_sale.total">
-        <xpath expr="//table[@id='cart_total']" position="attributes">
-            <attribute name="class">visible-xs-inline</attribute>
+    <template id="payment" inherit_id="website_sale.payment">
+        <xpath expr="//div[@class='container oe_website_sale']" position="replace">
+          <div id="#gw-payment" class="container oe_website_sale">
+            <div class="col-xs-12 col-sm-12 col-md-8 col-lg-8" style="padding-top: 30px">
+
+                <div class="step-navigation ">
+                    <div class="row">
+                        <div class="col-xs-6 col-sm-6 col-md-3">
+                                <span class="round-tab">
+                                    1
+                                </span>
+                                <p>Review Order</p>
+                        </div>
+                        <div class="col-xs-6 col-sm-6 col-md-3">
+                                <span class="round-tab">
+                                    2
+                                </span>
+                                <p>Billing/Shipping</p>
+                        </div>
+                        <div class="col-xs-6 col-sm-6 col-md-3 activestep">
+                                <span class="round-tab">
+                                    3
+                                </span>
+                                <p>Payment</p>
+                        </div>
+                        <div class="col-xs-6 col-sm-6 col-md-3">
+                                <span class="round-tab">
+                                    4
+                                </span>
+                                <p>Confirmation</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="container-content-main clearfix ">
+                    <div class="content-header" style="min-height: 70px">
+                        <div class="col-sm-4"><h4>Payment</h4></div>
+                        <div class="col-sm-4"><span class="pull-right text-muted small" style="margin-top: 10px">Accepted Cards</span></div>
+                        <div class="col-sm-4 pull-right creditcards"></div>
+                    </div>
+                    <div class="content-body">
+                        <div class="col-lg-8 col-sm-9">
+                            <t t-foreach="errors" t-as="error">
+                            <div class="alert alert-danger" t-if="error">
+                                <h4>
+                                <t t-esc="error[0]"/>
+                                </h4>
+                                <t t-esc="error[1]"/>
+                            </div>
+                            </t>
+                        </div>
+                        <div class="col-lg-8 col-sm-9 oe_cart">
+                            <t t-set="website_sale_order" t-value="website.sale_get_order()"/>
+                            <div class="js_payment mb64 row" t-if="acquirers and website_sale_order.amount_total" id="payment_method">
+                                <t t-if="not should_pay_now">
+                                <form action="/shop/payment/validate" class="billing-info" method="post">
+
+                                    <div t-attf-class="form-group row">
+                                        <label for="card_number" class="col-sm-4 form-control-label right-align">Card Number</label>
+                                        <div class="col-sm-7">
+                                            <input type="text" name="card_number" class="form-control" t-att-value="card_number"/>
+                                        </div>
+                                    </div>
+                                    <div t-attf-class="form-group row">
+                                        <label for="expiry" class="col-sm-4 form-control-label right-align">Expiry</label>
+                                        <div class="form-group" style="display: inline-flex; margin-left: 15px">
+                                            <select name="expiry_month" class="form-control" required="required">
+                                                <t t-set="months" t-value="zip(range(1,13), ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])"/>
+                                                <option value="">Month</option>
+                                                <t t-foreach="months" t-as="month">
+                                                <option t-att-value="month_value[0]">
+                                                    <t t-esc="month_value[1]"/>
+                                                </option>
+                                                </t>
+                                            </select>
+                                            <div id="thisyear" class="hidden"></div>
+                                            <select name="expiry_year" class="form-control" required="required">
+                                                <t t-set="years" t-value="zip(range(cyear, cyear+10), range(cyear, cyear+10))"/>
+                                                <option value="">Year</option>
+                                                <t t-foreach="years" t-as="year">
+                                                <option t-att-value="year_value[0]">
+                                                    <t t-esc="year_value[1]"/>
+                                                </option>
+                                            </t>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div t-attf-class="form-group row">
+                                        <label for="cvv" class="col-sm-4 form-control-label right-align">CVV</label>
+                                        <div class="col-sm-7">
+                                            <input type="text" name="cvv" class="form-control" t-att-value="cvv" required="required"/>
+                                        </div>
+                                    </div>
+                                    <div t-attf-class="form-group row">
+                                        <label for="pin" class="col-sm-4 form-control-label right-align">4 Digit PIN</label>
+                                        <div class="col-sm-7">
+                                            <input type="password" name="pin" class="form-control" t-att-value="pin" required="required"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-offset-4 col-sm-7">
+                                            <a class="btn btn-primary a-submit">Submit</a>
+                                        </div>
+                                    </div>
+                                </form>
+                                </t>
+                                <t t-if="should_pay_now">
+                                    <t t-foreach="acquirers or []" t-as="acquirer">
+                                    <div t-att-data-id="acquirer.id" class="oe_sale_acquirer_button pull-right">
+                                        <div t-raw="acquirer.button"/>
+                                        <div t-field="acquirer.pre_msg"/>
+                                    </div>
+                                    </t>
+
+                                </t>
+                                <t t-call="website_sale.total"/>
+                                <div class="clearfix"/>
+                                <div class="oe_structure"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- sidebar -->
+            <div class="col-xs-12 col-sm-12 col-md-4 col-lg-4" id="right_column" style="padding-top: 30px">
+                <div class="rightSidebar">
+                    <t t-set="website_sale_order" t-value="website.sale_get_order()"/>
+                    <div class="sidebar">
+                        <div class="sidebar-header">
+                            <h4>Your Order</h4>
+                        </div>
+                        <div class="sidebar-body">
+                            <p>Subtotal:
+                                <span class="pull-right" style="white-space: nowrap;" t-field="website_sale_order.amount_untaxed" t-field-options="{                       &quot;widget&quot;: &quot;monetary&quot;,                       &quot;from_currency&quot;: &quot;website_sale_order.pricelist_id.currency_id&quot;,                       &quot;display_currency&quot;: &quot;user_id.partner_id.property_product_pricelist.currency_id&quot;                   }"/>
+                            </p>
+                            <p>Taxes:
+                                <span class="pull-right" style="white-space: nowrap;" t-field="website_sale_order.amount_tax" t-field-options="{                       &quot;widget&quot;: &quot;monetary&quot;,                       &quot;from_currency&quot;: &quot;website_sale_order.pricelist_id.currency_id&quot;,                       &quot;display_currency&quot;: &quot;user_id.partner_id.property_product_pricelist.currency_id&quot;                   }"/>
+                            
+                            </p>
+                        </div>
+
+                        <div class="sidebar-footer">
+                            <p class="green-text">TOTAL:
+                                <span class="pull-right" style="white-space: nowrap;" t-field="website_sale_order.amount_total" t-field-options="{                       &quot;widget&quot;: &quot;monetary&quot;,                       &quot;from_currency&quot;: &quot;website_sale_order.pricelist_id.currency_id&quot;,                       &quot;display_currency&quot;: &quot;user_id.partner_id.property_product_pricelist.currency_id&quot;                   }"/>
+                            </p>
+                        </div>
+                    </div>
+                    </div>
+                    <button class="btn btn-greenwood-outline btn-md " type="button"   aria-expanded="false">
+                        <span><a href="/shop/cart">Edit Cart</a></span>
+                    </button>
+
+                    <p class="continue-shopping"><a href="/shop">Continue Shopping</a></p>
+                </div>
+          </div>
+          <div class="oe_structure"/>
+
         </xpath>
+    </template>
+    
+    <template id="account_verify" name="Account verify">
+      <t t-call="web.login_layout">
+        <!--xpath expr="." position="inside">
+          <link rel="stylesheet" type="text/less" href="/theme_bootswatch/static/src/css/jquery.fileupload.css"/>
+          <script src="/theme_bootswatch/static/src/js/app.js" type="text/javascript"/>
+          <script src="/theme_bootswatch/static/src/js/jquery.ui.widget.js" type="text/javascript"/>
+          <script src="/theme_bootswatch/static/src/js/jquery.iframe-transport.js" type="text/javascript"/>
+          <script src="/theme_bootswatch/static/src/js/jquery.fileupload.js" type="text/javascript"/>
+        </xpath-->
+        <h1>Profile Verification</h1>
+        <form role="form" t-attf-action="#" method="POST" enctype="multipart/form-data" onsubmit="this.action = this.action + location.hash">
+          <!--<input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>-->
+          <div id="account_type" class="btn-group">
+            <label class="btn btn-default active"><input type="radio" name="company_type" value="person" checked="checked"/> Individual
+                </label>
+            <label class="btn btn-default"><input type="radio" name="company_type" value="company"/> Corporate
+                </label>
+          </div>
+          <div class="form-group field-bvn">
+            <label for="bvn" class="control-label">BVN</label>
+            <input type="text" name="bvn" t-att-value="bvn" id="bvn" class="form-control" required="required" autofocus="autofocus"/>
+          </div>
+          <div id="identity-wrapper">
+            <div class="form-group field-identity-id ind">
+              <input t-att-value="identity_id" class="inputfile inputfile-1" id="identity_id" type="file" name="identity_id" data-url="/file/upload/identity_id/gwtemp" data-gw-files="{count} file(s) attached" autofocus="autofocus"/>
+              <label for="identity_id">
+                <span>Upload Your Identity ID</span>
+              </label>
+            </div>
+            <div id="spinner-identity"/>
+            <div id="identity-status" class="file-status">
+              <ul/>
+            </div>
+            <input type="hidden" id="gw_idfn" name="gw_idfn" t-att-value="gw_idfn"/>
+          </div>
+          <div class="form-group field-empname ind">
+            <label for="empname" class="control-label">Employer name</label>
+            <input type="text" name="empname" t-att-value="empname" id="empname" class="form-control" required="required" autofocus="autofocus"/>
+          </div>
+          <div class="form-group field-companyname corp">
+            <label for="companyname" class="control-label">Company name</label>
+            <input type="text" name="companyname" t-att-value="companyname" id="companyname" class="form-control" required="required" autofocus="autofocus"/>
+          </div>
+            <div class="form-group field-phone">
+                <label for="phone" class="control-label">Mobile</label>
+                    <input type="tel" name="phone" class="form-control" t-att-value="phone" required="required" autofocus="autofocus" id="phone"/>
+            </div>
+          <div class="form-group field-mexpenses ind">
+            <label for="mexpenses" class="control-label">Total monthly expenses</label>
+            <input type="text" name="mexpenses" t-att-value="mexpenses" id="mexpenses" class="form-control" required="required" autofocus="autofocus"/>
+          </div>
+          <div class="clearfix">
+            <div class="form-group field-payslips ind">
+              <input t-att-value="payslips" class="inputfile inputfiles" id="payslips" type="file" name="payslips" data-url="/files/upload/payslips" data-gw-files="{count} file(s) attached" autofocus="autofocus" multiple="multiple"/>
+              <label for="payslips">
+                <span>Upload Your Latest Payslips</span>
+              </label>
+            </div>
+            <div id="spinner-payslips"/>
+            <div id="payslips-status" class="file-status">
+              <ul/>
+            </div>
+            <input type="hidden" id="gw_pyslpfn" name="gw_pyslpfn" t-att-value="gw_pyslpfn"/>
+          </div>
+          <div class="form-group field-company-regid corp">
+            <label for="company_reg_id" class="control-label">Company Reg Id</label>
+            <input type="text" name="company_reg_id" t-att-value="company_reg_id" id="company_reg_id" class="form-control" required="required" autofocus="autofocus"/>
+          </div>
+          <div class="form-group field-address">
+            <label for="address" class="control-label">Address</label>
+            <input type="text" name="address" t-att-value="address" id="address" class="form-control" required="required" autofocus="autofocus"/>
+          </div>
+          <div class="clearfix">
+            <div class="form-group field-tenancy ind">
+              <input t-att-value="tenancy" class="inputfile inputfile-1" id="tenancy" type="file" name="tenancy" data-url="/file/upload/tenancy/gwtemp" data-gw-files="{count} file(s) attached" autofocus="autofocus"/>
+              <label for="tenancy">
+                <span>Upload Your Tenancy Agreement</span>
+              </label>
+            </div>
+            <div id="spinner-tenancy"/>
+            <div id="tenancy-status" class="file-status">
+              <ul/>
+            </div>
+            <input type="hidden" id="gw_tncyfn" name="gw_tncyfn" t-att-value="gw_tncyfn"/>
+          </div>
+          <div class="form-group field-job-position">
+            <label for="job_position" class="control-label">Job position</label>
+            <input type="text" name="job_position" t-att-value="job_position" id="job_position" class="form-control" required="required" autofocus="autofocus"/>
+          </div>
+          <input type="hidden" name="cyear" t-att-value="cyear"/>
+          <t t-log="months_short"/>
+          <div class="form-group field-debit-date">
+            <label for="debit_date" class="control-label">Debit date</label>
+            <div style="display: inline-flex">
+              <select id="gw-mths-list" class="form-control" name="debit_date_month" required="required" autofocus="autofocus">
+                <t t-foreach="months_short" t-as="item">
+                  <option t-att-value="item_value[0]">
+                    <t t-esc="item_value[1]"/>
+                  </option>
+                </t>
+              </select>
+              <select id="gw-days-list" class="form-control" name="debit_date_day" required="required" autofocus="autofocus">
+                <t t-foreach="days" t-as="day">
+                  <option t-att-value="day_value">
+                    <t t-esc="day_value"/>
+                  </option>
+                </t>
+              </select>
+            </div>
+          </div>
+          <p class="alert alert-danger" t-if="error">
+            <t t-esc="error"/>
+          </p>
+          <p class="alert alert-success" t-if="message">
+            <t t-esc="message"/>
+          </p>
+          <input type="hidden" name="redirect" t-att-value="redirect"/>
+          <div class="clearfix oe_login_buttons">
+            <button type="submit" onclick="GW.formValidate()" formnovalidate="formnovalidate" class="btn btn-primary">Submit</button>
+          </div>
+        </form>
+      </t>
+    </template>
+    <template id="profile_edit_person" name="Profile edit person">
+      <t t-call="web.login_layout">
+        <h1>Edit Profile</h1>
+        <form role="form" t-attf-action="/profile/{{userid}}/edit" method="POST" enctype="multipart/form-data" onsubmit="this.action = this.action + location.hash">
+          <div class="form-group field-bvn">
+            <label for="bvn" class="control-label">BVN</label>
+            <input type="text" class="form-control" required="required" autofocus="autofocus" name="bvn" id="bvn" t-att-value="bvn"/>
+          </div>
+          <div class="form-group field-empname">
+            <label for="empname" class="control-label">Employer</label>
+            <input type="text" name="empname" id="empname" class="form-control" t-att-value="empname" required="required" autofocus="autofocus"/>
+          </div>
+          <div class="form-group field-mexpenses">
+            <label for="mexpenses" class="control-label">Total monthly expenses</label>
+            <input type="text" name="mexpenses" id="mexpenses" class="form-control" required="required" autofocus="autofocus" t-att-value="mexpenses"/>
+          </div>
+          <div class="form-group field-address">
+            <label for="address" class="control-label">Address</label>
+            <input type="text" name="address" id="address" class="form-control" required="required" autofocus="autofocus" t-att-value="address"/>
+          </div>
+          <div class="form-group field-job-position">
+            <label for="job_position" class="control-label">Job position</label>
+            <input type="text" name="job_position" id="job_position" class="form-control" t-att-value="job_position" required="required" autofocus="autofocus"/>
+          </div>
+          <div class="clearfix oe_login_buttons">
+            <button type="submit" class="btn btn-primary">Update</button>
+          </div>
+        </form>
+      </t>
+    </template>
+    <template id="profile_edit_company" name="Profile edit corporate">
+      <t t-call="web.login_layout">
+        <h1>Edit Profile</h1>
+        <form role="form" t-attf-action="/profile/{{userid}}/edit" method="POST" enctype="multipart/form-data" onsubmit="this.action = this.action + location.hash">
+          <div class="form-group field-bvn">
+            <label for="bvn" class="control-label">BVN</label>
+            <input type="text" class="form-control" required="required" autofocus="autofocus" name="bvn" id="bvn" t-att-value="bvn"/>
+          </div>
+          <div class="form-group field-companyname">
+            <label for="companyname" class="control-label">Company</label>
+            <input type="text" name="companyname" id="companyname" class="form-control" t-att-value="companyname" required="required" autofocus="autofocus"/>
+          </div>
+          <div class="form-group field-company-regid corp">
+            <label for="company_reg_id" class="control-label">Company Reg Id</label>
+            <input type="text" name="company_reg_id" id="company_reg_id" class="form-control" required="required" autofocus="autofocus" t-att-value="company_reg_id"/>
+          </div>
+          <div class="form-group field-address">
+            <label for="address" class="control-label">Address</label>
+            <input type="text" name="address" id="address" class="form-control" required="required" autofocus="autofocus" t-att-value="address"/>
+          </div>
+          <div class="form-group field-job-position">
+            <label for="job_position" class="control-label">Job position</label>
+            <input type="text" name="job_position" id="job_position" class="form-control" t-att-value="job_position" required="required" autofocus="autofocus"/>
+          </div>
+          <div class="clearfix oe_login_buttons">
+            <button type="submit" class="btn btn-primary">Update</button>
+          </div>
+        </form>
+      </t>
+    </template>
+    <template id="profile" name="Profile">
+      <t t-call="web.login_layout">
+        <h1>Profile
+            <span style="float: right"><button class="btn btn-sm" type="button"><t t-esc="verb"/></button></span>
+        </h1>
+        <div id="corp-container">
+          <div class="gw-field-view" style="display: inline-block; min-height: 50px; max-height:120px">
+            <label style="width: 200px">BVN</label>
+            <span t-field="profile.bvn" t-field-options="{&quot;widget&quot;: &quot;text&quot;}"/>
+          </div>
+          <div class="gw-field-view" style="display: inline-block; min-height: 50px; max-height: 120px">
+            <label style="width: 200px">Employer</label>
+            <span t-field="profile.empname" t-field-options="{&quot;widget&quot;: &quot;text&quot;}"/>
+          </div>
+          <div class="gw-field-view">
+            <label>Address</label>
+            <span t-field="profile.street" t-field-options="{&quot;widget&quot;: &quot;text&quot;}"/>
+          </div>
+          <div class="gw-field-view">
+            <label>Phone</label>
+            <span t-field="profile.phone" t-field-options="{&quot;widget&quot;: &quot;phone&quot;}"/>
+          </div>
+          <div class="gw-field-view">
+            <label>Total monthly expenses</label>
+            <span t-field="profile.mexpenses" t-field-options="{&quot;widget&quot;: &quot;text&quot;}"/>
+          </div>
+          <div class="gw-field-view">
+            <label>Job Position</label>
+            <span t-field="profile.function" t-field-options="{&quot;widget&quot;: &quot;text&quot;}"/>
+          </div>
+          <div class="gw-field-view">
+            <label>Debit date</label>
+            <span t-field="profile.debit_date" t-field-options="{&quot;format&quot;: &quot;Y-m-d&quot;}"/>
+          </div>
+        </div>
+      </t>
+    </template>
+    <template id="profile_company" name="Profile Company">
+      <t t-call="web.login_layout">
+        <h1>Profile
+              <span style="float: right"><button class="btn btn-sm" type="button"><t t-esc="verb"/></button></span>
+          </h1>
+        <div id="corp-container">
+          <div class="gw-field-view" style="display: inline-block; min-height: 50px; max-height:120px">
+            <label style="width: 200px">BVN</label>
+            <span t-field="profile.bvn" t-field-options="{&quot;widget&quot;: &quot;text&quot;}"/>
+          </div>
+          <div class="gw-field-view" style="display: inline-block; min-height: 50px; max-height: 120px">
+            <label style="width: 200px">Company name</label>
+            <span t-field="profile.companyname" t-field-options="{&quot;widget&quot;: &quot;text&quot;}"/>
+          </div>
+          <div class="gw-field-view">
+            <label>Address</label>
+            <span t-field="profile.street" t-field-options="{&quot;widget&quot;: &quot;text&quot;}"/>
+          </div>
+          <div class="gw-field-view">
+            <label>Phone</label>
+            <span t-field="profile.phone" t-field-options="{&quot;widget&quot;: &quot;phone&quot;}"/>
+          </div>
+          <div class="gw-field-view">
+            <label>Company Reg Id</label>
+            <span t-field="profile.company_reg_id" t-field-options="{&quot;widget&quot;: &quot;text&quot;}"/>
+          </div>
+          <div class="gw-field-view">
+            <label>Job Position</label>
+            <span t-field="profile.function" t-field-options="{&quot;widget&quot;: &quot;text&quot;}"/>
+          </div>
+          <div class="gw-field-view">
+            <label>Debit date</label>
+            <span t-field="profile.debit_date" t-field-options="{&quot;format&quot;: &quot;Y-m-d&quot;}"/>
+          </div>
+        </div>
+      </t>
+    </template>
+    <template id="footer_default" inherit_id="website.footer_default" customize_show="True" name="Automatic Footer">
+      <xpath expr="//div[@class='row']" position="replace">
+        </xpath>
+    </template>
+    <template id="layout_footer_copyright" inherit_id="website.layout_footer_copyright" name="Footer Copyright">
+      <xpath expr="//footer//div[@class='container mt16 mb8']" position="replace">
+        <div class="container mt16 mb8">
+          <div class="pull-right" t-ignore="true" t-if="not editable">
+            </div>
+          <div class="pull-left text-muted">
+                Copyright &amp;copy; <span t-field="res_company.name">Company name</span>
+            </div>
+        </div>
+      </xpath>
     </template>
     <!--template id="homepage" name="Homepage" inherit_id="website.homepage">
       <xpath expr="//*[@id='wrap']" position="inside">
@@ -201,20 +878,5 @@
             </div>
         </xpath>
     </template-->
-    <template id="footer_default" inherit_id="website.footer_default" customize_show="True" name="Automatic Footer">
-        <xpath expr="//div[@class='row']" position="replace">
-        </xpath>
-    </template>
-    <template id="layout_footer_copyright" inherit_id="website.layout_footer_copyright" name="Footer Copyright">
-        <xpath expr="//footer//div[@class='container mt16 mb8']" position="replace">
-        <div class="container mt16 mb8">
-          <div class="pull-right" t-ignore="true" t-if="not editable">
-            </div>
-          <div class="pull-left text-muted">
-                Copyright &amp;copy; <span t-field="res_company.name">Company name</span>
-            </div>
-        </div>
-      </xpath>
-    </template>
   </data>
 </openerp>

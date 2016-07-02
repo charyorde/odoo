@@ -45,3 +45,6 @@ class GreenpayController(http.Controller):
 #         return http.request.render('payment_greenpay.object', {
 #             'object': obj
 #         })
+
+class InterswitchController(http.Controller):
+    _cancel_url = '/payment/interswitch/cancel/'

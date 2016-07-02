@@ -75,11 +75,65 @@ instance.gw.FieldInputFile = instance.web.form.AbstractField.extend({
   render_value: function() {
     if (this.$filenameEle.val()) {
       this.setValue(this.$filenameEle.val())
-    }
+   }
     console.log("render_value", this.get("value"))
     //this.$el.html(this.filename)
   }
 
 })
 
+instance.gw.FieldSwiftFile = instance.web.form.AbstractField.extend({
+  template: "GWSwiftFile",
+  start: function() {
+    var self = this
+    var model_field = self.name
+    console.log("model_field", model_field)
+    var model = new instance.web.Model("res.partner");
+    console.log("this.session", this.session)
+    var uid = this.session.uid
+    var $ele = $('span#gw-dwnld-link a')
+    ele = this.$el
+    //model.call('_find_partner_by_userid', [uid], {context: new instance.web.CompoundContext()}).then(function(result) {
+    //})
+    model.query([model_field])
+    .filter(['user_id', '=', uid])
+    .first()
+    .then(function(result) {
+      console.log("model query result", result)
+      var file = result[model_field]
+      if (file) {
+        fname = Object.keys(file)
+        fpath = _.toArray(file)
+        self.setValue([fname, fpath])
+        //self.render_value()
+      }
+    })
+  },
+
+  setValue: function(value_) {
+    this.$ele.attr('href', value_[1])
+    this.$ele.html(value_[0])
+    this.set_value(value_)
+  },
+
+  render_value: function() {
+    console.log("render_value called auto")
+  }
+
+});
+
+instance.gw.FieldSwiftFiles = instance.web.form.AbstractField.extend({
+  template: "GWSwiftFiles",
+  start: function() {
+    var self = this
+    field = this.$el
+    var model = new instance.web.Model("res.partner");
+    var uid = this.session.uid
+    // query to get the filename
+    var id = JSON.stringify(this.view.datarecord.id)
+  }
+})
+
 instance.web.form.widgets.add('gwinputfile', 'instance.gw.FieldInputFile')
+instance.web.form.widgets.add('gwswiftfile', 'instance.gw.FieldSwiftFile')
+//instance.web.form.widgets.add('gwswiftfiles', 'instance.gw.FieldSwiftFiles')

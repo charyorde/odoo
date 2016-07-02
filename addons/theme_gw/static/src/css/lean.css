@@ -7173,7 +7173,7 @@ input:focus {
 }
 
 #spinner-identity, #spinner-payslips, #spinner-tenancy {
-    background: url('/theme_bootswatch/static/src/img/spiffygif_30x30.gif') no-repeat;
+    background: url('/theme_gw/static/src/img/spiffygif_30x30.gif') no-repeat;
     width: 50px;
     height: 36px;
     display: none;
@@ -7368,7 +7368,7 @@ table#cart_products {
 
 table#cart_products tbody tr {
     border-bottom: 1px solid #e5e5e5;
-    margin-bottom: 20px;
+   margin-bottom: 20px;
 }
 
 .continue-shopping {
@@ -7378,4 +7378,68 @@ table#cart_products tbody tr {
 .cart-price .price-lbl {
     margin-right: 25px;
     margin-left: -8px
+}
+
+.step-navigation {
+    background-color: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 2px;
+    padding: 20px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.step-navigation .activestep {
+    color: #55A32A;
+}
+
+.step-navigation .activestep span.round-tab {
+    background-color: #55A32A;
+    border: 2px solid #55A32A;
+    color: #fff;
+}
+
+.step-navigation .round-tab {
+    width: 30px;
+    height: 30px;
+    line-height: 24px;
+    display: inline-block;
+    border-radius: 100px;
+    background: #fff;
+    border: 2px solid #555555;
+    background-color: #555555;
+    z-index: 2;
+    left: 0;
+    text-align: center;
+    font-size: 14px;
+    color: #fff;
+}
+
+.right-align {
+    text-align: right;
+}
+
+.container-content-main {
+    background-color: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 2px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    overflow: visible;
+}
+
+.container-content-main .content-header {
+    color: #55A32A;
+    padding: 15px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.container-content-main .content-body {
+    padding: 15px;
+}
+
+.creditcards {
+    border: 1px solid #f6f6f6;
+    height: 46px;
+    background: url('/theme_gw/static/src/img/creditcards.png') no-repeat
 }

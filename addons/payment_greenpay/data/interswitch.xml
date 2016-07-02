@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+  <data noupdate="1">
+    <record id="payment_acquirer_interswitch" model="payment.acquirer">
+      <field name="name">Interswitch</field>
+      <field name="provider">interswitch</field>
+      <field name="company_id" ref="base.main_company"/>
+      <field name="view_template_id" ref="interswitch_acquirer_button"/>
+      <field name="environment">test</field>
+      <field name="validation">manual</field>
+      <field name="website_published">False</field>
+    </record>
+  </data>
+</openerp>

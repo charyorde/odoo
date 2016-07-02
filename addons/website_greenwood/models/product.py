@@ -25,6 +25,9 @@ class product_template(models.Model):
                                           default='featured',
                                           string="Website block type",
                                           help="In which section of the website do you want to display this image")
+
+    # gw_payment_acquirer = fields.Many2one('payment.acquirer', 'Payment Acquirer')
+
     # swift_etag = fields.Char(string="Swift etag")
 
     def onchange_promo_image_scale(self, cr, uid, ids, type):
@@ -37,7 +40,6 @@ class product_template(models.Model):
         pass
 
     @api.model
-    # @api.returns('self')
     def get_product_promo_image(self, id):
         # template_obj = self.pool.get('product.template')
         template_obj = self.env['product.template']

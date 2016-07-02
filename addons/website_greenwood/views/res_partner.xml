@@ -15,7 +15,11 @@
                 <field name="companyname" attrs="{'invisible': [('is_company','=', False)]}"/>
                 <field name="mexpenses" attrs="{'invisible': [('is_company','=', True)]}"/>
                 <field name="company_reg_id" attrs="{'invisible': [('is_company','=', False)]}"/>
-                <field name="debit_date" />
+                <field name="debit_date"/>
+                <field name="identity_id" widget="gwswiftfile"/>
+                <field name="tenancy" widget="gwswiftfile"/>
+                <!--field name="payslips" widget="gwswiftfiles"/-->
+                <field name="approval_status"/>
               </group>
             </group>
           </page>

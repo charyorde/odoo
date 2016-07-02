@@ -14,7 +14,7 @@ SWIFT_PUBLIC_CONTAINER = 'public'
 class Config():
     def __init__(self):
         self.env = dict(name='local',
-                        swift_token='AUTH_tk4858d72eae5243fba7d6075e8347a879',
+                        swift_token='AUTH_tk5183c81f869e4504a8ca9636355a4022',
                         swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin')
 
     def _env(self):

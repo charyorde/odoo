@@ -7,9 +7,12 @@
             <label for="promo_image"><span>Attach a file</span></label>
         </div>
         <div id="spinner"/>
-        <div id="promo-image-status" class="file-status"><ul></ul></div>
+        <div id="promo-image-status" class="file-status"><ul/></div>
         <input type="hidden" id="gw_promofn" name="gw_promofn" t-att-value="gw_promofn"/>
         <input type="hidden" id="gw_pid" name="gw_pid" t-att-value="gw_pid"/>
         </div>
+    </t>
+    <t t-name="GWSwiftFile">
+        <span id="gw-dwnld-link"><a href=""></a></span>
     </t>
 </templates>
