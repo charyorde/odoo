@@ -21,11 +21,12 @@ class payment_interswitch(osv.Model):
     def _get_interswitch_endpoints(self, cr, uid, environment, context=None):
         if environment == 'prod':
             return {
-                'interswitch_form_url': 'http://interswitch',
-                'interswitch_rest_url': 'http://interswitch',
+                'interswitch_form_url': 'https://stageserv.interswitchng.com/test_paydirect/pay',
             }
         else:
-            return 'https://stageserv.interswitchng.com/test_paydirect/pay'
+            return {
+                'interswitch_form_url': 'https://stageserv.interswitchng.com/test_paydirect/pay',
+            }
             # return {
             #    'interswitch_form_url': 'http://localhost:3009/v1/',
             #    'interswitch_rest_url': 'http://localhost:3009/v1/mock-payment',
@@ -51,17 +52,21 @@ class payment_interswitch(osv.Model):
 
         _logger.info("partner_values %r" % partner_values)
         _logger.info("tx_values %r" % tx_values)
+        tx = tx_values.get('tx')
+
         # Interswitch tx_values
         itx_tx_values = {
             # 'amount': float_repr(float_round(partner_values['amount'], 2) * 100, 0),
-            'site_redirect_url': '%s%s' % (base_url, tx_values['return_url']),
-            'tnx_ref': tx_values['tx_id'],
+            'site_redirect_url': '%s%s' % (base_url, tx_values.get('return_url') or tx_values.get('site_redirect_url')),
+            'tnx_ref': tx_values.get('tx_id') if tx_values.get('tx_id') else 0,
             'product_id': '',
             'pay_item_id': '',
             'cancel_url': '%s' % urlparse.urljoin(base_url, InterswitchController._cancel_url),
             'hash': '',
-            'cust_id': tx_values['partner'].user_id,
+            'cust_id': tx_values['partner'].user_id.id,
             'cust_name': ' '.join([partner_values['first_name'], partner_values['last_name']]),
+            'site_name': base_url,
+            'local_date_time': tx.create_date if tx else 0,
         }
         tx_values.update(itx_tx_values)
         return partner_values, tx_values
