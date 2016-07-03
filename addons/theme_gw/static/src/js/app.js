@@ -236,7 +236,12 @@ GW.Sale = function() {
   //});
 }
 
+GW.Utils = function() {
+  $('footer > div[class="container hidden-print"]').addClass("hidden")
+}
+
 $(document).ready(function() {
+  new GW.Utils()
   new GW.ProfileCreate()
   new GW.Sale()
 })

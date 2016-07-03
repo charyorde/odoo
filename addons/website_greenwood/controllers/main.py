@@ -503,9 +503,9 @@ class GreenwoodOrderController(website_sale):
         categ_name = product.categ_id.name
         _logger.info("categ name %s" % categ_name)
         if categ_name not in ['Monthly Payments', '6 Month Prepayment']:
-            values['should_pay_now'] = True
-        else:
             values['should_pay_now'] = False
+        else:
+            values['should_pay_now'] = True
 
         return request.website.render("website_sale.payment", values)
 
@@ -608,6 +608,7 @@ class GreenwoodOrderController(website_sale):
         _logger.info("acquirer object %s, %r" % (acquirer.name, acquirer))
 
         vals = {
+            'partner_id': order.partner_id.id,
             'card_number': post['card_number'],
             'expiry': int('%d%d' % (int(post['expiry_month']), int(post['expiry_year']))),
             'cvv': post['cvv'],

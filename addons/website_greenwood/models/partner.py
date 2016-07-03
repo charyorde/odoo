@@ -41,7 +41,7 @@ class res_partner(models.Model):
 
     # A Greenwood account can be in unchecked, pending, suspended, denied
     # or accepted state
-    approval_status = fields.Char(default='unchecked',required=True)
+    approval_status = fields.Char('Approval status', default='draft',required=True)
 
     def create_debit_date(self, v):
         pass

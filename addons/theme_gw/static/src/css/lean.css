@@ -7172,6 +7172,9 @@ input:focus {
     box-shadow: none
 }
 
+/*******
+ * GW
+ ******/
 #spinner-identity, #spinner-payslips, #spinner-tenancy {
     background: url('/theme_gw/static/src/img/spiffygif_30x30.gif') no-repeat;
     width: 50px;
@@ -7303,6 +7306,11 @@ input:focus {
     color: #FFF;
     margin-bottom: 30px;
     letter-spacing: 5px;
+}
+
+#mailing-list .js_subscribe {
+    width: 25%;
+    margin: 0 auto
 }
 
 #mailing-list .form-control:focus {
@@ -7442,4 +7450,14 @@ table#cart_products tbody tr {
     border: 1px solid #f6f6f6;
     height: 46px;
     background: url('/theme_gw/static/src/img/creditcards.png') no-repeat
+}
+
+
+div.carousel div.carousel-content {
+    background: none;
+    background-color: none
+}
+
+#wrapwrap > footer {
+    height: auto
 }
