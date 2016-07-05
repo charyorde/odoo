@@ -7458,6 +7458,6 @@ div.carousel div.carousel-content {
     background-color: none
 }
 
-/*#wrapwrap > footer {
-    height: auto
-}*/
+#wrapwrap > main {
+    height: 100%
+}

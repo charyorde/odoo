@@ -86,7 +86,9 @@ class res_partner(models.Model):
 
     @api.multi
     def credit_status(self, val):
-        """ Get a Greenwood account credit status """
+        """ Get a Greenwood account credit status
+        :status Incomplete
+        """
         approval_status = self.search([('uid', '=', val)]).approval_status
         if not approval_status:
             return 'pending'
@@ -109,3 +111,8 @@ class res_partner(models.Model):
         user_obj = self.env['res.users']
         partner = user_obj.browse(int(uid)).partner_id
         return partner
+
+    @api.model
+    def find_partner_by_id(self, id):
+        partner_obj = self.env['res.partner']
+        return partner_obj.browse(int(id))

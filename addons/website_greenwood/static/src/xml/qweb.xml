@@ -13,6 +13,6 @@
         </div>
     </t>
     <t t-name="GWSwiftFile">
-        <span id="gw-dwnld-link"><a href=""></a></span>
+    <span t-att-data-field-value="widget.get('value')" id="gw-dwnld-link"></span>
     </t>
 </templates>

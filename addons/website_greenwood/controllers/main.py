@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import json
+import ast
 import tempfile
 from urlparse import urljoin
 import urllib2
@@ -12,6 +13,8 @@ from openerp.tools.translate import _
 from openerp.addons.web.controllers.main import Home, ensure_db, Session
 from openerp.addons.website.controllers.main import Website
 from openerp.addons.website_sale.controllers.main import website_sale
+from openerp.addons.auth_signup.controllers.main import AuthSignupHome
+from openerp.addons.auth_signup.res_users import SignupError
 from openerp.addons.website_greenwood.main import Config, GWCalender, Swift
 from openerp.addons.website_greenwood.main import \
     _datetime_from_string, _months_list, _days_number_list, \
@@ -95,7 +98,8 @@ def _save_files_perm(filenames):
             res.append(tup)
         else:
             return None
-    return dict(res)
+    d = json.dumps(dict(res))
+    return ast.literal_eval(d)
 
 def swift_upload(fn, fd, cb=None):
     container, response, filename, filedata = 'gw', dict(), fn, fd
@@ -155,6 +159,7 @@ def _saveFiles(mapping, key):
     return dict(res)
 
 def _get_swift_file(filename):
+    """ @todo Male filename a list """
     r = swift.get_object(SWIFT_WEB_CONTAINER, filename, response_dict=gresp)
     _logger.info("\n>>>> swift get response %r" % r)
     return r
@@ -503,9 +508,9 @@ class GreenwoodOrderController(website_sale):
         categ_name = product.categ_id.name
         _logger.info("categ name %s" % categ_name)
         if categ_name not in ['Monthly Payments', '6 Month Prepayment']:
-            values['should_pay_now'] = False
-        else:
             values['should_pay_now'] = True
+        else:
+            values['should_pay_now'] = False
 
         return request.website.render("website_sale.payment", values)
 
@@ -668,7 +673,7 @@ class GreenwoodWebLogin(Website):
         return r
 
 
-    @http.route(website=True, auth='public')
+    @http.route()
     def web_login(self, redirect=None, *args, **kw):
         r = super(GreenwoodWebLogin, self).web_login(redirect=redirect, *args, **kw)
         cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
@@ -695,6 +700,29 @@ class GreenwoodWebLogin(Website):
                 redirect = '/'
             return http.redirect_with_hash(redirect)
         return r
+
+
+class GreenwoodWebSignup(AuthSignupHome):
+
+    @http.route()
+    def web_auth_signup(self, redirect=None, *args, **kw):
+        qcontext = self.get_auth_signup_qcontext()
+
+        if not qcontext.get('token') and not qcontext.get('signup_enabled'):
+            raise werkzeug.exceptions.NotFound()
+
+        if 'error' not in qcontext and request.httprequest.method == 'POST':
+            try:
+                self.do_signup(qcontext)
+                return self.web_login(redirect=None, *args, **kw)
+            except (SignupError, AssertionError), e:
+                if request.env["res.users"].sudo().search([("login", "=", qcontext.get("login"))]):
+                    qcontext["error"] = _("Another user is already registered using this email address.")
+                else:
+                    _logger.error(e.message)
+                    qcontext['error'] = _("Could not create a new account.")
+
+        return request.render('auth_signup.signup', qcontext)
 
 
 class Service(http.Controller):

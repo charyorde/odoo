@@ -11,7 +11,7 @@ GW.ProfileCreate = function() {
   this.$spi = $('#spinner-identity')
   this.$spt = $('#spinner-tenancy')
   this.$spp = $('#spinner-payslips')
-  this.$submit = $('button[type="submit"')
+  this.$submit = $('#gw-profile-btn button[type="submit"')
   this.$idstatus = $('#identity-status')
   this.$pysstatus = $('#payslips-status')
   this.$tncystatus = $('#tenancy-status')
