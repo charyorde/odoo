@@ -8,13 +8,22 @@
       <field name="arch" type="xml">
         <group name="website_and_pos" position="inside">
           <group string="Greenwood Sales Promo" name="gw_sales_promo">
-              <!--field name="promo_image" widget="image"/-->
-              <field name="promo_image" widget="gwinputfile"/>
+            <!--field name="promo_image" widget="image"/-->
+            <field name="promo_image" widget="gwinputfile"/>
             <field name="promo_image_scale" on_change="onchange_promo_image_scale(promo_image_scale)"/>
             <field name="block_type" on_change="onchange_block_type(block_type)"/>
             <field name="promo_sale"/>
           </group>
         </group>
+        <page name="financing" string="Financing">
+          <group>
+              <group string="Finance Structure" name="gw_fin_structure">
+                  <field name="fin_structure"/>
+                  <field name="fin_structure_desc"/>
+
+            </group>
+          </group>
+        </page>
       </field>
     </record>
   </data>

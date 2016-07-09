@@ -26,6 +26,13 @@ class product_template(models.Model):
                                           string="Website block type",
                                           help="In which section of the website do you want to display this image")
 
+    fin_structure = fields.Selection([('monthly', 'Monthly Payments'),
+                                      ('6mrp', '6 Months Repayment Plan'),
+                                      ('balloon', 'Balloon Payment')],
+                                     string="Finance Structure", default='monthly')
+
+    fin_structure_desc = fields.Text(string="Description", default='None')
+
     # gw_payment_acquirer = fields.Many2one('payment.acquirer', 'Payment Acquirer')
 
     # swift_etag = fields.Char(string="Swift etag")

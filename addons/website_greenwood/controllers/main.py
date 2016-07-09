@@ -219,11 +219,11 @@ class WebsiteGreenwood(http.Controller):
             values['payslips'] = profile.payslips
             values['mexpenses'] = profile.mexpenses
             values['tenancy'] = profile.tenancy
-            return request.render('theme_gw.profile', values)
+            return request.render('theme_houzz.profile', values)
         else:
             values['companyname'] = profile.companyname
             values['company_reg_id'] = profile.company_reg_id
-            return request.render('theme_gw.profile_company', values)
+            return request.render('theme_houzz.profile_company', values)
 
     @http.route('/profile/add', type='http', website=True, auth="user")
     def add(self, redirect=None, **kw):
@@ -280,7 +280,7 @@ class WebsiteGreenwood(http.Controller):
 
             if account_type == 'person' and nofile:
                 values['error'] = 'Please attach the required files'
-                return request.render('theme_gw.account_verify', values)
+                return request.render('theme_houzz.account_verify', values)
 
             profile = self._create_profile(account_type, request, params)
 
@@ -293,12 +293,12 @@ class WebsiteGreenwood(http.Controller):
                     redirect = '/profile'
                 return http.redirect_with_hash(redirect)
             params['error'] = _('Some fields fail validation')
-            return request.render('theme_gw.account_verify', params)
+            return request.render('theme_houzz.account_verify', params)
 
         values['res_partner'] = res_partner_obj.browse(cr, SUPERUSER_ID, 44, context=context),
         values['greenwood_account'] = greenwood_account_obj
 
-        return request.render('theme_gw.account_verify', values)
+        return request.render('theme_houzz.account_verify', values)
 
     def _create_profile(self, account_type, request, params):
         _logger.info("website_greenwood: Creating new profile")
@@ -418,11 +418,11 @@ class WebsiteGreenwood(http.Controller):
             values['payslips'] = profile.payslips
             values['mexpenses'] = profile.mexpenses
             values['tenancy'] = profile.tenancy
-            return request.render('theme_gw.profile_edit_person', values)
+            return request.render('theme_houzz.profile_edit_person', values)
         else:
             values['companyname'] = profile.companyname
             values['company_reg_id'] = profile.company_reg_id
-            return request.render('theme_gw.profile_edit_company', values)
+            return request.render('theme_houzz.profile_edit_company', values)
 
 
 class GreenwoodOrderController(website_sale):
@@ -636,6 +636,7 @@ class GreenwoodOrderController(website_sale):
         #    return request.redirect('/shop')
 
         return request.redirect('/shop/confirmation')
+
 
 # class GreenwoodSession(Session):
 #    @http.route('/web/session/logout', auth='none', type='http')
