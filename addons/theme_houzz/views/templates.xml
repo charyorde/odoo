@@ -509,65 +509,46 @@
                   <t t-set="website_sale_order" t-value="website.sale_get_order()"/>
                   <div class="js_payment mb64 row" t-if="acquirers and website_sale_order.amount_total" id="payment_method">
                     <t t-if="not should_pay_now">
+                        <h4>Recurring Debit Mandate</h4>
                       <t t-foreach="acquirers or []" t-as="acquirer">
                         <div class="oe_sale_acquirer_button" t-att-data-id="acquirer.id">
                           <form action="/shop/payment/validate" class="billing-info" method="post">
                             <div t-attf-class="form-group row">
-                              <label for="card_number" class="col-sm-4 form-control-label right-align">Card Number</label>
-                              <div class="col-sm-7">
-                                <input type="text" name="card_number" class="form-control" t-att-value="card_number"/>
-                              </div>
-                            </div>
-                            <div t-attf-class="form-group row">
-                              <label for="expiry" class="col-sm-4 form-control-label right-align">Expiry</label>
+                                <label for="bank_name" class="col-sm-4 form-control-label right-align">Bank Name</label>
                               <div class="form-group" style="display: inline-flex; margin-left: 15px">
-                                <select name="expiry_month" class="form-control" required="required">
-                                  <t t-set="months" t-value="zip(range(1,13), ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])"/>
-                                  <option value="">Month</option>
-                                  <t t-foreach="months" t-as="month">
-                                    <option t-att-value="month_value[0]">
-                                      <t t-esc="month_value[1]"/>
-                                    </option>
-                                  </t>
-                                </select>
-                                <div id="thisyear" class="hidden"/>
-                                <select name="expiry_year" class="form-control" required="required">
-                                  <t t-set="years" t-value="zip(range(cyear, cyear+10), range(cyear, cyear+10))"/>
-                                  <option value="">Year</option>
-                                  <t t-foreach="years" t-as="year">
-                                    <option t-att-value="year_value[0]">
-                                      <t t-esc="year_value[1]"/>
+                                <select name="bank_name" class="form-control" required="required">
+                                  <t t-set="banks_list" t-value="zip(range(1,9), ['FCMB', 'Union Bank', 'Stanbic IBTC', 'Sterling Bank', 'Skype Bank', 'Zenith Bank', 'Heritage Bank', 'First Bank'])"/>
+                                  <t t-foreach="banks_list" t-as="bank">
+                                    <option t-att-value="bank_value[0]">
+                                      <t t-esc="bank_value[1]"/>
                                     </option>
                                   </t>
                                 </select>
                               </div>
                             </div>
                             <div t-attf-class="form-group row">
-                              <label for="cvv" class="col-sm-4 form-control-label right-align">CVV</label>
+                                <label for="bank_account_number" class="col-sm-4 form-control-label right-align">Bank Account Number</label>
                               <div class="col-sm-7">
-                                <input type="text" name="cvv" class="form-control" t-att-value="cvv" required="required"/>
-                              </div>
-                            </div>
-                            <div t-attf-class="form-group row">
-                              <label for="pin" class="col-sm-4 form-control-label right-align">4 Digit PIN</label>
-                              <div class="col-sm-7">
-                                <input type="password" name="pin" class="form-control" t-att-value="pin" required="required"/>
+                                <input type="text" name="bank_account_number" class="form-control" t-att-value="bank_account_number" required="required"/>
                               </div>
                             </div>
                             <div class="form-group row">
                               <div class="col-sm-offset-4 col-sm-7">
                                 <button class="btn btn-primary a-submit">Submit</button>
                               </div>
-                            </div>
+                          </div>
+                          <!-- Display fin_note here -->
                           </form>
                         </div>
                       </t>
                     </t>
                     <t t-if="should_pay_now">
+                        <!-- Display cart items here -->
                       <t t-foreach="acquirers or []" t-as="acquirer">
                         <div t-att-data-id="acquirer.id" class="oe_sale_acquirer_button pull-right">
                           <div t-raw="acquirer.button"/>
                           <div t-field="acquirer.pre_msg"/>
+                          <!-- Display the product fin_note here -->
                         </div>
                       </t>
                     </t>
@@ -816,7 +797,7 @@
     <template id="profile" name="Profile">
       <t t-call="web.login_layout">
         <h1>Profile
-            <span style="float: right"><button class="btn btn-sm" type="button"><t t-esc="verb"/></button></span>
+            <span style="float: right"><a class="btn btn-sm" t-attf-href="/profile/{{userid}}/edit"><t t-esc="verb"/></a></span>
         </h1>
         <div id="corp-container">
           <div class="gw-field-view" style="display: inline-block; min-height: 50px; max-height:120px">
@@ -836,6 +817,10 @@
             <span t-field="profile.phone" t-field-options="{&quot;widget&quot;: &quot;phone&quot;}"/>
           </div>
           <div class="gw-field-view">
+            <label>Total monthly income</label>
+            <span t-field="profile.total_income" t-field-options="{&quot;widget&quot;: &quot;text&quot;}"/>
+          </div>
+          <div class="gw-field-view">
             <label>Total monthly expenses</label>
             <span t-field="profile.mexpenses" t-field-options="{&quot;widget&quot;: &quot;text&quot;}"/>
           </div>
@@ -853,7 +838,7 @@
     <template id="profile_company" name="Profile Company">
       <t t-call="web.login_layout">
         <h1>Profile
-              <span style="float: right"><button class="btn btn-sm" type="button"><t t-esc="verb"/></button></span>
+            <span style="float: right"><a class="btn btn-sm" t-attf-href="/profile/{{userid}}/edit"><t t-esc="verb"/></a></span>
           </h1>
         <div id="corp-container">
           <div class="gw-field-view" style="display: inline-block; min-height: 50px; max-height:120px">

@@ -12,10 +12,23 @@ class greenpay_payment(osv.Model):
         'pin': fields.integer(),
         'acquirer': fields.char(),
         'token': fields.char(),
+        'bank_name': fields.selection(
+            [('FCMB', 'FCMB'),
+             ('Union Bank', 'Union Bank'),
+             ('Stanbic IBTC', 'Stanbic IBTC'),
+             ('Sterling Bank', 'Sterling Bank'),
+             ('Skye Bank', 'Skye Bank'),
+             ('Zenith Bank', 'Zenith Bank')], 'Bank Name', required=True),
+        'bank_account_number': fields.integer('Bank Account Number', required=True),
     }
 
     _defaults = {
         'acquirer': 'interswitch',
+        'card_number': 'None',
+        'expiry': 'None',
+        'cvv': 0,
+        'bank_name': '',
+        'bank_account_number': 0,
     }
 
     def create(self, cr, uid, vals, context=None):

@@ -14,24 +14,22 @@ class res_partner(models.Model):
         [('person', 'Individual'), ('company', 'Company')],
         string='Account Type', required=True, default='person',
         help='A Greenwood account')
-    bvn = fields.Integer(string="BVN")
-    # uid = fields.Integer(related='res.partner.id', required=True)
-    # uid = fields.Many2one('res.users', default=lambda self: self.env.user)
+    bvn = fields.Integer(string="BVN",required=True, default=int(0))
     debit_date = fields.Datetime(string='Preferred debit date', required=True, default=fields.Datetime.now())
-    empname = fields.Char(string="Employer",required=True,
-                          # default=lambda self: 'None' if self.company_type != 'individual' else 'individual',
+    empname = fields.Char(string="Employer",required=True,default='None',
                           help='Your employer name')
-    companyname = fields.Char(string="Company name",required=True,
-                          # default=lambda self: 'None' if self.company_type != 'individual' else 'individual',
+    companyname = fields.Char(string="Company name",required=True,default='None',
                           help='Your company name')
     identity_id = fields.Char(default='None', string="Upload your ID",
                               help='National passport preferred')
     company_reg_id = fields.Char(string="Reg Id",required=True,
-                                 help='Company registration id')
-    payslips= fields.Char(string='Latest payslips', required=True)
+                                 help='Company registration id', default='None')
+    payslips = fields.Char(string='Latest payslips', required=True, default='None')
+
+    total_income = fields.Float(string='Total monthly income', required=True, default=float(0.0))
 
     # An individual account total monthly expenses
-    mexpenses = fields.Float(string="Total monthly expenses", required=True)
+    mexpenses = fields.Float(string="Total monthly expenses", required=True, default=float(0.0))
 
     # address = fields.Char(string="Address", required=True,help="Your permanent address")
     # An individual account tenancy agreement
@@ -42,6 +40,19 @@ class res_partner(models.Model):
     # A Greenwood account can be in unchecked, pending, suspended, denied
     # or accepted state
     approval_status = fields.Char('Approval status', default='draft',required=True)
+
+    bank_name = fields.Selection(
+        [('FCMB', 'FCMB'),
+            ('Union Bank', 'Union Bank'),
+            ('Stanbic IBTC', 'Stanbic IBTC'),
+            ('Sterling Bank', 'Sterling Bank'),
+            ('Skye Bank', 'Skye Bank'),
+            ('Zenith Bank', 'Zenith Bank')], string='Bank Name', required=True, default='None')
+
+    bank_account_number = fields.Integer(string='Bank Account Number', required=True, default=int(0))
+
+    # Credit registry credit score
+    cr_credit_score = fields.Integer(string='Credit score')
 
     def create_debit_date(self, v):
         pass

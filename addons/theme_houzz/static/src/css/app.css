@@ -6893,6 +6893,32 @@ div.category.double-height > a > img {
     overflow: auto;
 }
 
+#identity-status, #payslips-status, #tenancy-status {
+    display: none
+
+}
+
+.file-status {
+    margin: 30px 0 10px 0;
+    max-height: 100px;
+    border: solid 1px #f4f2f2;
+    min-height: 33px;
+    padding: 5px;
+    clear: left;
+    background-color: #fcfcfc;
+    color: #bcbcbc;
+}
+
+.gw-field-view {
+    display: inline-block;
+    min-height: 50px;
+    max-height: 120px
+}
+
+.gw-field-view label {
+    width: 200px    
+}
+
 .creditcards {
     border: 1px solid #f6f6f6;
     height: 46px;

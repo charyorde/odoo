@@ -333,7 +333,8 @@ class WebsiteGreenwood(http.Controller):
             'phone': params['phone'],
             'company_reg_id': 'None',
             'payslips': payslips,
-            'mexpenses': request.params['mexpenses'],
+            'total_income': float(params['total_income']),
+            'mexpenses': float(request.params['mexpenses']),
             'tenancy': tenancy,
             'street': request.params['address'],
             'function': request.params['job_position'],
@@ -369,6 +370,7 @@ class WebsiteGreenwood(http.Controller):
             'company_reg_id': request.params['company_reg_id'],
             'phone': params['phone'],
             'payslips': 'None',
+            'total_income': float(0.0),
             'mexpenses': float(0.0),
             'tenancy': 'None',
             # 'address': request.params['address'],
@@ -398,7 +400,10 @@ class WebsiteGreenwood(http.Controller):
 
         if request.httprequest.method == 'POST':
             params = request.params.copy()
-            greenwood_account_obj.write(params)
+            _logger.info("\n>>> params %r" % params)
+            values = params
+            greenwood_account_obj.write(cr, SUPERUSER_ID, [partner_id], values, context=context)
+            # greenwood_account_obj.write(params)
             redirect = '/profile'
             return http.redirect_with_hash(redirect)
         # For Get Load the model and return values to client
@@ -838,3 +843,18 @@ class Service(http.Controller):
         headers.append(('Content-Length', len(image_data)))
         return request.make_response(image_data, headers)
 
+    @http.route('/creditassessment/import', type='json')
+    def import_credit_assessment(self):
+        """ Import credit assessment from CSV """
+        pass
+
+    @http.route('/affordability/compute', type='json')
+    def compute_credit_affordability(self):
+        """ Uses credit fields in res_partner (such as
+        BVN, crc credit score, total income, monthly expenses, employer,
+        affordability (salary must be able to pay at least 30%)) to check customer's credit eligibility
+
+        Based on the score, the credit status is updated
+        """
+
+        pass
