@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "mobileservices",
+    'name': "statics",
 
     'summary': """
-        REST APIs that exposes core Greenwood functionalities for mobile
-    integration
+        Serving all Greenwood Static files
     """,
 
     'description': """
-        Web service integration for mobile
+    Serving static files
     """,
 
     'author': "Greenwood",
@@ -17,16 +16,15 @@
     # Categories can be used to filter modules in modules listing
     # Check https://github.com/odoo/odoo/blob/master/openerp/addons/base/module/module_data.xml
     # for the full list
-    'category': 'Technical Settings',
+    'category': 'Techinical Settings',
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['web', 'website_sale'],
+    'depends': ['web'],
 
     # always loaded
     'data': [
         # 'security/ir.model.access.csv',
         'templates.xml',
     ],
-    'auto_install': True,
 }

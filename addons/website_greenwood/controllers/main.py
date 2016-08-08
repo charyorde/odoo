@@ -30,6 +30,9 @@ config = Config()
 
 _logger = logging.getLogger(__name__)
 
+db_list = http.db_list
+
+db_monodb = http.db_monodb
 
 def swift():
     return config.swift()
@@ -652,7 +655,6 @@ class GreenwoodOrderController(website_sale):
 #        return werkzeug.utils.redirect(base_url, 303)
 
 
-
 class GreenwoodWebLogin(Website):
 
     @http.route()
@@ -665,6 +667,7 @@ class GreenwoodWebLogin(Website):
         product_template_obj = pool.get('product.template')
         product_ids = product_template_obj.search(cr, SUPERUSER_ID, [('promo_sale','=',True)])
         _logger.info(">>> Product ids %r" % product_ids)
+        _logger.info(">>> App %r" % request.httprequest.app)
         main_section = []
         for id in product_ids:
             product = product_template_obj.browse(cr, SUPERUSER_ID, [id])
@@ -729,6 +732,7 @@ class GreenwoodWebSignup(AuthSignupHome):
                     qcontext['error'] = _("Could not create a new account.")
 
         return request.render('auth_signup.signup', qcontext)
+
 
 
 class Service(http.Controller):
@@ -843,10 +847,13 @@ class Service(http.Controller):
         headers.append(('Content-Length', len(image_data)))
         return request.make_response(image_data, headers)
 
-    @http.route('/creditassessment/import', type='json')
-    def import_credit_assessment(self):
+    @http.route('/creditassessment/import', auth="public", type='json')
+    def import_credit_assessment(self, **post):
         """ Import credit assessment from CSV """
-        pass
+        return {
+            "jsonrpc": "2.0",
+            "id": null
+        }
 
     @http.route('/affordability/compute', type='json')
     def compute_credit_affordability(self):
@@ -855,6 +862,11 @@ class Service(http.Controller):
         affordability (salary must be able to pay at least 30%)) to check customer's credit eligibility
 
         Based on the score, the credit status is updated
+        Response = {
+        "score": "",
+        "affordability": "N10,000 per month"
+        }
         """
 
         pass
+

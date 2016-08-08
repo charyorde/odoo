@@ -33,7 +33,7 @@ class res_partner(models.Model):
 
     # address = fields.Char(string="Address", required=True,help="Your permanent address")
     # An individual account tenancy agreement
-    tenancy = fields.Char(string="Tenancy Agreement", required=True)
+    tenancy = fields.Char(string="Tenancy Agreement", required=True, default='None')
     # Job position
     # job_position = fields.Char(string="Job Position", required=True)
 

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
+import json
+import functools
 
 from openerp import http
 from openerp.http import request
@@ -22,25 +24,36 @@ class OAuthTokenValidator(object):
             # invoke UAS token_validate service
             token = 'xyz'
             return start_response(token)
-        return self.app(environ, start_response)
+        _logger.info(">>> token validator %r" % self.app)
+        # response = urllib.request
+        return self.app(environ, start_response('200 OK', [('Content-Type', 'text/plain')]))
+
+
+def oauth_token_validator(f=None, token=None):
+    if f is None:
+        _logger.info(">>> oauth token validator partial %r" % token)
+        return functools.partial(oauth_token_validator, token=token)
+    @functools.wraps(f)
+    def wrapper(*args, **kw):
+        _logger.info(">>> oauth token validator %r" % token)
+        return f(*args, **kw)
+    return wrapper
 
 
 class Mobileservices(http.Controller):
 
-    @http.route('/m', auth='public', type='json', methods=['POST'], website=True)
-    def m(self, **kw):
-        app = OAuthTokenValidator(request.app)
-        print(">>> request object: %r" % request)
-        print(">>> OAuthTokenValidator: %r" % app)
-        _logger.info(">>> request object: %r" % request)
-        _logger.info(">>> OAuthTokenValidator: %r" % app)
-        mime, result = 'application/json', { }
-        response = {
-            "jsonrpc": "2.0"
+    @http.route("/m/test", type="json", auth="none")
+    def test(self):
+        _logger.info(">>> request.session.db: %r" % request.session.db)
+        # request.session.db = request.session.db or 'gw8'
+        # _logger.info(">>> request object: %r" % token)
+        # mime, result = 'application/json', { }
+        return {
+            "token": "3344448jvjvvkk",
         }
-        return response
 
-    @http.route('/m/ping', type='http', auth='public', methods=['POST'], website=True)
+    @http.route('/m/ping', type='http', auth='none', methods=['GET', 'POST'])
+    @oauth_token_validator(token='eeeier8r8494944jfjf')
     def ping(self, **kw):
         print(">>> request object: %r" % request)
         app = OAuthTokenValidator(request.httprequest.app)
@@ -49,9 +62,10 @@ class Mobileservices(http.Controller):
         _logger.info(">>> OAuthTokenValidator: %r" % app)
         mime, result = 'application/json', { }
         response = {
-            "jsonrpc": "2.0"
+            "message": "OK",
+            "status": 200
         }
-        return response
+        return http.Response(json.dumps(response), status=response['status'], headers=[('Content-Type', mime)])
 
     @http.route('/m/signup', auth='public', type='json', methods=['POST'], website=True)
     def signup(self, **kw):
