@@ -47,7 +47,8 @@ class res_partner(models.Model):
             ('Stanbic IBTC', 'Stanbic IBTC'),
             ('Sterling Bank', 'Sterling Bank'),
             ('Skye Bank', 'Skye Bank'),
-            ('Zenith Bank', 'Zenith Bank')], string='Bank Name', required=True, default='None')
+            ('Greenwood', 'Greenwood'),
+            ('Zenith Bank', 'Zenith Bank'),], string='Bank Name', required=True, default='Greenwood')
 
     bvn_linked_bank = fields.Selection(
         [('FCMB', 'FCMB'),
@@ -55,7 +56,8 @@ class res_partner(models.Model):
             ('Stanbic IBTC', 'Stanbic IBTC'),
             ('Sterling Bank', 'Sterling Bank'),
             ('Skye Bank', 'Skye Bank'),
-            ('Zenith Bank', 'Zenith Bank')], string='Bank Name', required=True, default='None')
+            ('Greenwood', 'Greenwood'),
+            ('Zenith Bank', 'Zenith Bank'),], string='BVN linked bank', required=True, default='Greenwood')
 
     bank_account_number = fields.Integer(string='Bank Account Number', required=True, default=int(0))
 

@@ -31,8 +31,21 @@ def _mobile_partner_dispatch(db_name, method_name, *method_args):
             method_name, method_args)
         raise
 
+def _mobile_users_dispatch(db_name, method_name, *method_args):
+    try:
+        registry = openerp.modules.registry.RegistryManager.get(db_name)
+        assert registry, 'Unknown database %s' % db_name
+        with registry.cursor() as cr:
+            users = registry['res.users']
+            return getattr(users, method_name)(cr, *method_args)
+
+    except Exception, e:
+        _logger.exception('Failed to execute Mobile service method %s with args %r.',
+            method_name, method_args)
+        raise
+
 def exp_signup(db_name, uid, passwd, login, name, password, passconfirm, context=None):
-    return _mobile_partner_dispatch(db_name, 'signup', login, name, password, passconfirm, context)
+    return _mobile_users_dispatch(db_name, 'mobile_signup', login, name, password, passconfirm, context)
 
 def exp_products(db_name, uid, passwd, page=0, search='', category=None, context=None):
     return _mobile_product_dispatch(db_name, 'products_list', uid, page, search, category, context)
