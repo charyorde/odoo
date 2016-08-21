@@ -49,6 +49,14 @@ class res_partner(models.Model):
             ('Skye Bank', 'Skye Bank'),
             ('Zenith Bank', 'Zenith Bank')], string='Bank Name', required=True, default='None')
 
+    bvn_linked_bank = fields.Selection(
+        [('FCMB', 'FCMB'),
+            ('Union Bank', 'Union Bank'),
+            ('Stanbic IBTC', 'Stanbic IBTC'),
+            ('Sterling Bank', 'Sterling Bank'),
+            ('Skye Bank', 'Skye Bank'),
+            ('Zenith Bank', 'Zenith Bank')], string='Bank Name', required=True, default='None')
+
     bank_account_number = fields.Integer(string='Bank Account Number', required=True, default=int(0))
 
     # Credit registry credit score

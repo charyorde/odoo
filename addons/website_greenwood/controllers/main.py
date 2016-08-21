@@ -668,6 +668,7 @@ class GreenwoodWebLogin(Website):
         product_ids = product_template_obj.search(cr, SUPERUSER_ID, [('promo_sale','=',True)])
         _logger.info(">>> Product ids %r" % product_ids)
         _logger.info(">>> App %r" % request.httprequest.app)
+        _logger.info(">>> request.website %r" % request.website)
         main_section = []
         for id in product_ids:
             product = product_template_obj.browse(cr, SUPERUSER_ID, [id])
@@ -701,7 +702,7 @@ class GreenwoodWebLogin(Website):
                 redirect = '/'
             return http.redirect_with_hash(redirect)
         _logger.info(">>> There's redirect %s" % redirect)
-        if redirect and '/web' in redirect:
+        if redirect and '/web' in redirect and request.session.uid:
             if request.registry['res.users'].has_group(request.cr, request.session.uid, 'base.group_user'):
                 redirect = redirect
             else:
@@ -785,7 +786,7 @@ class Service(http.Controller):
     def deleteFileFromTemp(self):
         pass
 
-    @http.route("/object/bin/<string:filename>/<string:resize>")
+    @http.route("/object/bin/<string:filename>/<string:resize>", auth='public', website=True, methods=['GET'])
     def getSwiftBinaryFile(self, filename, resize=None):
         headers = [('Content-Type', 'image/png')]
         try:
