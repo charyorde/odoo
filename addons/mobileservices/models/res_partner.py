@@ -1,9 +1,14 @@
 import logging
 import json
+import base64
 
 from openerp import models, fields, api
 from openerp import SUPERUSER_ID
 from openerp.http import request
+
+from openerp.addons.website_greenwood.controllers.main import swift, _save_files_perm
+from openerp.addons.website_greenwood.main import \
+    SWIFT_GW_CONTAINER, SWIFT_GWTEMP_CONTAINER, SWIFT_WEB_CONTAINER, _datetime_from_string
 
 _logger = logging.getLogger(__name__)
 
@@ -17,6 +22,7 @@ class res_partner(models.Model):
         users = pool['res.users']
         partner = users.browse(cr, SUPERUSER_ID, uid, context=context).partner_id
         values = {
+            'id': partner.id,
             'name': partner.name,
             'company_id': partner.company_id.id,
             'create_date': partner.create_date,
@@ -56,13 +62,57 @@ class res_partner(models.Model):
             'bank_account_number': partner.bank_account_number,
             'bank_name': partner.bank_name,
             'cr_credit_score': partner.cr_credit_score,
-            'total_income': partner.total_income,
+            'total_income': partner.total_income, # monthly income
+            'annual_income': partner.annual_income,
+            'credit_info': self.get_credit_score(cr, uid, context=context),
+            'score_interpretation': partner.score_interpretation,
         }
 
         return values
 
-    def profile_update(self, cr, uid, **kw):
-        pass
+    def profile_update(self, cr, partner_id, post, context=None):
+        pool = self.pool
+        partner_obj = pool['res.partner']
+
+        post['debit_date'] = _datetime_from_string(post['debit_date'])
+        _logger.info("post %r" % post)
+
+        # @TODO Recompute credit affordability
+        partner = partner_obj.browse(cr, SUPERUSER_ID, partner_id, context=context)
+        partner_obj._compute_credit_score(cr, partner.user_id.id, context=context)
+
+        #post['identity_id'] = _save_files_perm([post['identity_id']]).keys()[0] if post['identity_id'] else None
+        return partner_obj.write(cr, SUPERUSER_ID, [partner_id], post, context=context)
+
+    def postFile(self, cr, uid, filename, data):
+        container, response, result = SWIFT_GWTEMP_CONTAINER, dict(), {}
+        try:
+            filecontent = base64.b64decode(data)
+            swift().put_object(container=container, obj=filename, contents=filecontent, response_dict=response)
+            mime = 'application/json'
+            response_headers = response['headers']
+            result['status'] = response['status']
+            if response['status'] == 201:
+                result['message'] = 'OK'
+            else:
+                result['message'] = response['reason']
+            return result
+        except Exception as e:
+            print("Failed upload: %r" % e)
+            result['status'] = 500
+            result['message'] = e.message
+            return result
+
+    def get_credit_score(self, cr, uid, context=None):
+        pool = self.pool
+        orm_user = pool['res.users']
+        partner_obj = pool['res.partner']
+        computed = partner_obj._compute_credit_score(cr, uid, context=context)
+        partner = orm_user.browse(cr, SUPERUSER_ID, uid, context=context).partner_id
+        return {
+            'credit_score': partner.credit_score,
+            'score_interpretation': partner.score_interpretation,
+        }
 
     def logout(self, cr, uid, context=None):
         _logger.info("request type %r" % request)

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
-  <data noupdate="1">
+  <data>
     <record model="ir.ui.view" id="view_partner_greenwood_profile_form">
       <field name="name">res.partner.form.greenwood.inherit</field>
       <field name="model">res.partner</field>
@@ -9,7 +9,7 @@
       <field name="arch" type="xml">
         <page name="accounting" position="after">
           <page string="Greenwood Profile" name="gwprofile">
-            <group>
+            <group name="gw_user_profile">
               <group string="Profile" name="gw_profile">
                 <field name="empname" attrs="{'invisible': [('is_company','=', True)]}"/>
                 <field name="companyname" attrs="{'invisible': [('is_company','=', False)]}"/>
@@ -21,13 +21,6 @@
                 <!--field name="payslips" widget="gwswiftfiles"/-->
                 <field name="approval_status"/>
               </group>
-            </group>
-            <group>
-                <group string="Credit Affordability" name="gw_credit_affordability">
-                    <!--field name="credit_score"/-->
-                    <field name="credit_status"/>
-                    <!--field name="credit_check_button" widget="gw_credit_check_button"/-->
-                </group>
             </group>
           </page>
         </page>

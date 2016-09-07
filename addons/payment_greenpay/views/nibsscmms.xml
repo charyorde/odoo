@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+  <data noupdate="1">
+    <template id="nibsscmms_acquirer_button">
+      <form t-if="acquirer" t-att-action="tx_url" method="post" target="_self">
+        <input type="hidden" name="amount" t-att-value="tx_values['amount']"/>
+        <input type="hidden" name="product_id" t-att-value="tx_values['product_id']"/>
+        <input type="hidden" name="currency" t-att-value="566"/>
+        <input type="hidden" name="site_redirect_url" t-att-value="tx_values['site_redirect_url']"/>
+        <input type="hidden" name="site_name" t-att-value="tx_values['site_name']"/>
+        <input type="hidden" name="cust_id" t-att-value="tx_values['cust_id']"/>
+        <input type="hidden" name="cust_name" t-att-value="tx_values['cust_name']"/>
+        <input type="hidden" name="tnx_ref" t-att-value="tx_values['tnx_ref']"/>
+        <input type="hidden" name="pay_item_id" t-att-value="tx_values['pay_item_id']"/>
+        <input type="hidden" name="local_date_time" t-att-value="tx_values['local_date_time']"/>
+        <input type="hidden" name="hash" t-att-value="tx_values['hash']"/>
+        <!--input t-if="cancel_return" type="hidden" name="tx_values['cancel_return']" t-att-value="cancel_return"/-->
+        <button type="submit" width="100px" t-att-class="submit_class">
+          <span t-if="submit_txt">
+            <t t-esc="submit_txt"/>
+            <span class="fa fa-long-arrow-right"/>
+          </span>
+        </button>
+      </form>
+    </template>
+  </data>
+</openerp>

@@ -2,6 +2,7 @@ import os
 import time
 
 from openerp import fields
+from cfenv import AppEnv
 
 import swiftclient
 SWIFT_GWTEMP_CONTAINER = 'gwtemp'
@@ -14,8 +15,9 @@ SWIFT_PUBLIC_CONTAINER = 'public'
 class Config():
     def __init__(self):
         self.env = dict(name='local',
-                        swift_token='AUTH_tkb08608c1fcba43bd9518b98af0e2fa30',
+                        swift_token='AUTH_tk0f21e7a5bef445e99b7eb275b836ea7a',
                         swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin')
+        self.appenv = AppEnv()
 
     def _env(self):
         env = self.env
@@ -29,10 +31,34 @@ class Config():
             env
         return env
 
+    def settings(self):
+        env = self._env()
+        # swift = self.swift()
+        if env['name'] != 'local':
+            env.update({
+                'backend_host': 'https://www.greenwood.ng',
+                'mobile_virtual_host': 'https://www.greenwood.ng',
+            })
+        else:
+            env.update({
+                'backend_host': 'https://odoo',
+                'mobile_virtual_host': 'https://192.168.56.1',
+            })
+            return env
+
     def swift(self):
         env = self._env()
+        swift = self.appenv.get_service('swift')
+        scred = swift.credentials
         if env['name'] != 'local':
-            pass
+            params = {
+                'username': scred['username'],
+                'password': scred['password'],
+                'authurl': scred['authurl'],
+                'preauthurl': scred['preauthurl'],
+                'preauthtoken': scred['preauthtoken'],
+            }
+            return self._swift_instance(params)
         else:
             return self._swift_local()
 
@@ -48,6 +74,15 @@ class Config():
                                               authurl=authurl,
                                               preauthurl=preauthurl,
                                               preauthtoken=preauthtoken,
+                                              retries=3)
+        return swift
+
+    def _swift_instance(self, params):
+        swift = swiftclient.client.Connection(user=params['username'],
+                                              key=params['password'],
+                                              authurl=params['authurl'],
+                                              preauthurl=params['preauthurl'],
+                                              preauthtoken=params['preauthtoken'],
                                               retries=3)
         return swift
 

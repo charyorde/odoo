@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "website_greenwood",
+    'name': "greenwood_ext",
 
     'summary': """
-        Alteration of Odoo for Greenwood""",
+        Greenwood Extension""",
 
     'description': """
-        Greenwood website Backend
+        Greenwood backend extension
     """,
 
     'author': "Greenwood",
-    'website': "http://www.greenwood.com",
+    'website': "https://www.greenwood.ng",
 
     # Categories can be used to filter modules in modules listing
     # Check https://github.com/odoo/odoo/blob/master/openerp/addons/base/module/module_data.xml
@@ -19,16 +19,15 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['web', 'website', 'website_sale'],
+    'depends': ['website_sale'],
 
     # always loaded
     'data': [
-        # 'security/ir.model.access.csv',
-        # 'data/greenwood_account.xml',
-        'views/res_partner.xml',
-        'views/views.xml',
+        #'views/res_partner.xml',
+        #'views/views.xml',
         'views/templates.xml',
         'views/product_view.xml',
+        'views/res_partner.xml',
     ],
     # only loaded in demonstration mode
     'qweb':[

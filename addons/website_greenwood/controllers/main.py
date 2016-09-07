@@ -5,6 +5,7 @@ import ast
 import tempfile
 from urlparse import urljoin
 import urllib2
+import base64
 
 import openerp
 from openerp import http, SUPERUSER_ID
@@ -163,6 +164,7 @@ def _saveFiles(mapping, key):
 
 def _get_swift_file(filename):
     """ @todo Male filename a list """
+    gresp = dict()
     r = swift.get_object(SWIFT_WEB_CONTAINER, filename, response_dict=gresp)
     _logger.info("\n>>>> swift get response %r" % r)
     return r
