@@ -2,6 +2,8 @@ import openerp
 
 import logging
 
+from openerp.addons.mobileservices import common
+
 _logger = logging.getLogger(__name__)
 
 
@@ -41,6 +43,9 @@ def _mobile_users_dispatch(db_name, method_name, *method_args):
         _logger.exception('Failed to execute Mobile service method %s with args %r.',
             method_name, method_args)
         raise
+
+def exp_send_email(db_name, uid, passwd, user_id, message):
+    return getattr(common, 'send_email')(user_id, message)
 
 def exp_signup(db_name, uid, passwd, login, name, password, passconfirm, context=None):
     return _mobile_users_dispatch(db_name, 'mobile_signup', login, name, password, passconfirm, context)
@@ -99,6 +104,7 @@ def dispatch(method, params):
                   'create_tx',
                   'country_states',
                   'product_cart_delete',
+                  'send_email',
                   'logout',
                   ]:
         (db, uid, passwd) = params[0:3]

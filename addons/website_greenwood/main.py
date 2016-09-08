@@ -27,6 +27,10 @@ class Config():
             env = dict(name='CLOUD', swift_token='')
         elif os.environ.get('DEV'):
             env = dict(name='dev', swift_token='')
+        elif os.environ.get('DEV_STAGING'):
+            env = dict(name='staging',
+                       swift_token='AUTH_tk0f21e7a5bef445e99b7eb275b836ea7a',
+                       swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin',)
         else:
             env
         return env
