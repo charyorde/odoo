@@ -14,9 +14,10 @@ SWIFT_PUBLIC_CONTAINER = 'public'
 
 class Config():
     def __init__(self):
-        self.env = dict(name='local',
-                        swift_token='AUTH_tk0f21e7a5bef445e99b7eb275b836ea7a',
-                        swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin')
+        #self.env = dict(name='local',
+                        #swift_token='AUTH_tk0f21e7a5bef445e99b7eb275b836ea7a',
+                        #swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin')
+        self.env = dict()
         self.appenv = AppEnv()
 
     def _env(self):
@@ -30,9 +31,11 @@ class Config():
         elif os.environ.get('DEV_STAGING'):
             env = dict(name='staging',
                        swift_token='AUTH_tk0f21e7a5bef445e99b7eb275b836ea7a',
-                       swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin',)
+                       swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin')
         else:
-            env
+            env = dict(name='local',
+                            swift_token='AUTH_tk0f21e7a5bef445e99b7eb275b836ea7a',
+                            swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin')
         return env
 
     def settings(self):
@@ -43,6 +46,7 @@ class Config():
                 'backend_host': 'https://www.greenwood.ng',
                 'mobile_virtual_host': 'https://www.greenwood.ng',
             })
+            return env
         else:
             env.update({
                 'backend_host': 'https://odoo',
@@ -52,17 +56,19 @@ class Config():
 
     def swift(self):
         env = self._env()
-        swift = self.appenv.get_service('swift')
-        scred = swift.credentials
+        #swift = self.appenv.get_service('swift')
+        #scred = swift.credentials
         if env['name'] != 'local':
-            params = {
-                'username': scred['username'],
-                'password': scred['password'],
-                'authurl': scred['authurl'],
-                'preauthurl': scred['preauthurl'],
-                'preauthtoken': scred['preauthtoken'],
-            }
-            return self._swift_instance(params)
+            #params = {
+                #'username': scred['username'],
+                #'password': scred['password'],
+                #'authurl': scred['authurl'],
+                #'preauthurl': scred['preauthurl'],
+                #'preauthtoken': scred['preauthtoken'],
+            #}
+            #return self._swift_instance(params)
+            # Using swift local for now
+            return self._swift_local()
         else:
             return self._swift_local()
 
