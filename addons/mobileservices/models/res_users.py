@@ -30,3 +30,8 @@ class res_users(models.Model):
         db, login, password = pool['res.users'].signup(cr, SUPERUSER_ID, values, None)
         cr.commit()
         return [db, login, password] if all([k for k in [db, login, password]]) else None
+
+    def mobile_reset_password(self, uid):
+        # Should we just use the web reset_password?
+        pass
+

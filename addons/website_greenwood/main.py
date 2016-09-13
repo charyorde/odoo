@@ -31,11 +31,15 @@ class Config():
         elif os.environ.get('DEV_STAGING'):
             env = dict(name='staging',
                        swift_token='AUTH_tk0f21e7a5bef445e99b7eb275b836ea7a',
-                       swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin')
+                       swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin',
+                       gcm_sender_id='',
+                       gcm_apikey='',)
         else:
             env = dict(name='local',
-                            swift_token='AUTH_tk0f21e7a5bef445e99b7eb275b836ea7a',
-                            swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin')
+                       swift_token='AUTH_tk0f21e7a5bef445e99b7eb275b836ea7a',
+                       swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin',
+                       gcm_sender_id='',
+                       gcm_apikey='')
         return env
 
     def settings(self):

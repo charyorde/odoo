@@ -40,7 +40,7 @@ class res_partner(models.Model):
         partner = users.browse(cr, SUPERUSER_ID, uid, context=context).partner_id
         empname = partner.empname
         companies = company.name_search(cr, SUPERUSER_ID, name=empname, operator='=')
-        return [EMPSCORE for c in companies if empname in c] or 0
+        return [EMPSCORE for c in companies if empname in c]
 
     def _validate_mexpenses(self, cr, uid, context=None):
         """ Is it less than monthly income? """
@@ -84,9 +84,13 @@ class res_partner(models.Model):
         total_income_score = getattr(self, prefix + '_total_income')(cr, uid, float(0.0), context=context)
         mexpenses_score = getattr(self, prefix + '_mexpenses')(cr, uid, context=context)
 
-        params = [bvn_score, emp_score, tenancy_score,
+        emp_score_value = emp_score[0] if emp_score else 0
+
+        params = [bvn_score, emp_score_value, tenancy_score,
                   cr_score, total_income_score,
                   mexpenses_score]
+
+        _logger.info("score params %r" % params)
 
         try:
             score = math.fsum(params) / 100

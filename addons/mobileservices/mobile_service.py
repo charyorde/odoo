@@ -71,6 +71,9 @@ def exp_confirm_order(db_name, uid, passwd, user_id, data, context=None):
 def exp_create_tx(db_name, uid, passwd, user_id, acquirer_id, context=None):
     return _mobile_product_dispatch(db_name, 'create_tx', user_id, acquirer_id, context)
 
+def exp_suggested_products(db_name, uid, passwd, product, context=None):
+    return _mobile_product_dispatch(db_name, 'suggested_products', product, context)
+
 def exp_country_states(db_name, uid, passwd, country_id):
     return _mobile_product_dispatch(db_name, 'country_states', country_id)
 
@@ -101,6 +104,7 @@ def dispatch(method, params):
                   'remove_from_cart',
                   'checkout',
                   'confirm_order',
+                  'suggested_products',
                   'create_tx',
                   'country_states',
                   'product_cart_delete',

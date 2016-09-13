@@ -1,6 +1,7 @@
 import logging
 import json
 import ast
+import random
 
 from openerp import models, fields, api
 from openerp.osv import osv
@@ -109,25 +110,31 @@ class product_template(models.Model):
         _logger.info("Companies %r" % pool['res.company'].name_search(cr, SUPERUSER_ID, name='Greenwood', operator='='))
         # Iterate through the product template, retrieving the products
         product_list = []
+        partner_ids = pool['res.partner'].browse(cr, SUPERUSER_ID, [], context=context).commercial_partner_id.id
         if products:
             for product in products:
+                # seller_ids in partner_ids
+                #sellers = filter(lambda x: x.name.id in partner_ids, product.seller_ids)
+                #sellers = filter(lambda x: x.name.display_name, product.seller_ids)
+                sellers = product.seller_ids.name.display_name
                 _logger.info("product %r" % [product.id, product.name, product.list_price])
                 product_list.append({'id': product.id,
                                      'name': product.name,
                                      'price': product.list_price,
                                      'product_imageurl': '{0}/web/binary/image?model=product.template&field=image_medium&id={1}'.format(config.settings()['mobile_virtual_host'], product.id),
                                      'product_imageurl_big': '{0}/web/binary/image?model=product.template&field=image&id={1}'.format(config.settings()['mobile_virtual_host'], product.id),
+                                     'sellers': sellers,
+                                     'fin_structure_desc': product.fin_structure_desc,
+                                     'fin_structure': product.fin_structure,
+                                     'contract_term': product.contract_term,
                                      }
                                     )
 
         # @todo For logged in user, flag items that user has in cart
 
         values = {
-            # 'products': ast.literal_eval(json.dumps(products.__dict__)),
-            # 'products': json.dumps(products.__dict__),
             'products': product_list,
         }
-
 
         return values
 
@@ -147,33 +154,39 @@ class product_template(models.Model):
         else:
             compute_currency = None
 
-        values = {
-            'order': {
-                'id': order.id,
-                'name': order.name,
-                'date_order': order.date_order,
-                'partner_id': order.partner_id.id,
-                'amount_tax': order.amount_tax,
-                'fiscal_position': order.fiscal_position.id,
-                'amount_untaxed': order.amount_untaxed,
-                'state': order.state,
-                'pricelist_id': order.pricelist_id.id,
-                # 'section_id': order.section_id.id,
-                'partner_invoice_id': order.partner_invoice_id.id,
-                'user_id': order.user_id.id,
-                # 'date_confirm': order.date_confirm,
-                'amount_total': order.amount_total,
-                'partner_shipping_id': order.partner_shipping_id.id,
-                'order_policy': order.order_policy,
-                'payment_tx_id': order.payment_tx_id.id,
-                'payment_acquirer_id': order.payment_acquirer_id.id,
-                'picking_policy': order.picking_policy,
-                'shipped': order.shipped,
-                'campaign_id': order.campaign_id.id,
-            },
+        values = {}
+
+        if order:
+            values.update({
+                'order': {
+                    'id': order.id,
+                    'name': order.name,
+                    'date_order': order.date_order,
+                    'partner_id': order.partner_id.id,
+                    'amount_tax': order.amount_tax,
+                    'fiscal_position': order.fiscal_position.id,
+                    'amount_untaxed': order.amount_untaxed,
+                    'state': order.state,
+                    'pricelist_id': order.pricelist_id.id,
+                    # 'section_id': order.section_id.id,
+                    'partner_invoice_id': order.partner_invoice_id.id,
+                    'user_id': order.user_id.id,
+                    # 'date_confirm': order.date_confirm,
+                    'amount_total': order.amount_total,
+                    'partner_shipping_id': order.partner_shipping_id.id,
+                    'order_policy': order.order_policy,
+                    'payment_tx_id': order.payment_tx_id.id,
+                    'payment_acquirer_id': order.payment_acquirer_id.id,
+                    'picking_policy': order.picking_policy,
+                    'shipped': order.shipped,
+                    'campaign_id': order.campaign_id.id,
+                }
+            })
+
+        values.update({
             #'compute_currency': compute_currency,
             'suggested_products': [],
-        }
+        })
 
         if order:
             # _order = order
@@ -375,6 +388,9 @@ class product_template(models.Model):
 
         _logger.info("New transaction created %r" % tx_id)
         # create a contract here?
+
+        # create a separate sale_order for tax and insurance attached to this
+        # user
 
         return tx_id or None
 
@@ -598,7 +614,28 @@ class product_template(models.Model):
             values['tax_id'] = [(6, 0, values['tax_id'])]
         return values
 
-    def suggested_products(self, cr, uid, context=None):
+    def suggested_products(self, cr, product_id, context=None):
+        product = self.pool['product.template'].browse(cr, SUPERUSER_ID, product_id, context=context)
+        s = set(j.id for j in (product.alternative_product_ids or []))
+        product_ids = random.sample(s, min(len(s),3))
+        products = self.pool['product.template'].browse(cr, SUPERUSER_ID, product_ids, context=context)
+        product_list = []
+        if products:
+            for product in products:
+                product_list.append({'id': product.id,
+                                    'name': product.name,
+                                    'price': product.list_price,
+                                    'product_imageurl': '{0}/web/binary/image?model=product.template&field=image_medium&id={1}'.format(config.settings()['mobile_virtual_host'], product.id),
+                                    'product_imageurl_big': '{0}/web/binary/image?model=product.template&field=image&id={1}'.format(config.settings()['mobile_virtual_host'], product.id),
+                                    'sellers': sellers,
+                                    'fin_structure_desc': product.fin_structure_desc,
+                                    'fin_structure': product.fin_structure,
+                                    'contract_term': product.contract_term,
+                                    }
+                                    )
+        return product_list
+
+    def _cart_suggested_products(self):
         pass
 
     def checkout_parse(self, address_type, data, remove_prefix=False):

@@ -77,7 +77,7 @@ class res_partner(models.Model):
         post['debit_date'] = _datetime_from_string(post['debit_date'])
         _logger.info("post %r" % post)
 
-        # @TODO Recompute credit affordability
+        # Recompute credit affordability
         partner = partner_obj.browse(cr, SUPERUSER_ID, partner_id, context=context)
         partner_obj._compute_credit_score(cr, partner.user_id.id, context=context)
 

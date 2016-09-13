@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
-    <data>
-        <record model="ir.ui.view" id="view_partner_greenwood_profile_form">
-            <field name="name">res.partner.form.greenwood_ext.inherit</field>
-            <field name="model">res.partner</field>
-            <field name="inherit_id" ref="base.view_partner_form"/>
-            <field name="view_type">tree,form</field>
-            <field name="arch" type="xml">
-                <page name="accounting" position="after">
-                    <page string="Credit Affordability" name="credit_info">
-                        <group>
-                            <group string="Credit Affordability" name="gw_credit_affordability">
-                                <field name="credit_score"/>
-                                <!--<field name="approval_status"/>-->
-                                <!--field name="credit_check_button" widget="gw_credit_check_button"/-->
-                            </group>
-                        </group>
-
-                    </page>
-                </page>
-            </field>
-        </record>
-    </data>
+  <data>
+    <record model="ir.ui.view" id="view_partner_greenwood_profile_form">
+      <field name="name">res.partner.form.greenwood_ext.inherit</field>
+      <field name="model">res.partner</field>
+      <field name="inherit_id" ref="base.view_partner_form"/>
+      <field name="view_mode">tree,form</field>
+      <field name="view_type">form</field>
+      <field name="arch" type="xml">
+        <page name="accounting" position="after">
+          <page string="Credit Affordability" name="credit_info">
+            <group>
+              <group string="Credit Affordability" name="gw_credit_affordability">
+                <field name="credit_score"/>
+                <!--<field name="approval_status"/>-->
+                <!--field name="credit_check_button" widget="gw_credit_check_button"/-->
+              </group>
+            </group>
+          </page>
+        </page>
+      </field>
+    </record>
+  </data>
 </openerp>

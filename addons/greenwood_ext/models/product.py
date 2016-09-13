@@ -12,6 +12,12 @@ class product_template(models.Model):
                                       ('balloon', 'Balloon Payment')],
                                     string="Finance Structure", default='monthly')
 
+    contract_term = fields.Selection([('12 months', '12 months'),
+                                      ('24 months', '24 months'),
+                                      ('36 months', '36 months'),
+                                      ('48 months', '48 months')],
+                                     string="Contract term", default='12 months')
+
     fin_structure_desc = fields.Text(string="Description", default='')
 
     fin_note = fields.Text(string="Payment note", default='')
