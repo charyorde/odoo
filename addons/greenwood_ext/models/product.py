@@ -13,6 +13,7 @@ class product_template(models.Model):
                                     string="Finance Structure", default='monthly')
 
     contract_term = fields.Selection([('12 months', '12 months'),
+                                      ('18 months', '18 months'),
                                       ('24 months', '24 months'),
                                       ('36 months', '36 months'),
                                       ('48 months', '48 months')],
