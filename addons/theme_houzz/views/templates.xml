@@ -509,12 +509,12 @@
                   <t t-set="website_sale_order" t-value="website.sale_get_order()"/>
                   <div class="js_payment mb64 row" t-if="acquirers and website_sale_order.amount_total" id="payment_method">
                     <t t-if="not should_pay_now">
-                        <h4>Recurring Debit Mandate</h4>
+                      <h4>Recurring Debit Mandate</h4>
                       <t t-foreach="acquirers or []" t-as="acquirer">
                         <div class="oe_sale_acquirer_button" t-att-data-id="acquirer.id">
                           <form action="/shop/payment/validate" class="billing-info" method="post">
                             <div t-attf-class="form-group row">
-                                <label for="bank_name" class="col-sm-4 form-control-label right-align">Bank Name</label>
+                              <label for="bank_name" class="col-sm-4 form-control-label right-align">Bank Name</label>
                               <div class="form-group" style="display: inline-flex; margin-left: 15px">
                                 <select name="bank_name" class="form-control" required="required">
                                   <t t-set="banks_list" t-value="zip(range(1,9), ['FCMB', 'Union Bank', 'Stanbic IBTC', 'Sterling Bank', 'Skype Bank', 'Zenith Bank', 'Heritage Bank', 'First Bank'])"/>
@@ -527,7 +527,7 @@
                               </div>
                             </div>
                             <div t-attf-class="form-group row">
-                                <label for="bank_account_number" class="col-sm-4 form-control-label right-align">Bank Account Number</label>
+                              <label for="bank_account_number" class="col-sm-4 form-control-label right-align">Bank Account Number</label>
                               <div class="col-sm-7">
                                 <input type="text" name="bank_account_number" class="form-control" t-att-value="bank_account_number" required="required"/>
                               </div>
@@ -536,14 +536,14 @@
                               <div class="col-sm-offset-4 col-sm-7">
                                 <button class="btn btn-primary a-submit">Submit</button>
                               </div>
-                          </div>
-                          <!-- Display fin_note here -->
+                            </div>
+                            <!-- Display fin_note here -->
                           </form>
                         </div>
                       </t>
                     </t>
                     <t t-if="should_pay_now">
-                        <!-- Display cart items here -->
+                      <!-- Display cart items here -->
                       <t t-foreach="acquirers or []" t-as="acquirer">
                         <div t-att-data-id="acquirer.id" class="oe_sale_acquirer_button pull-right">
                           <div t-raw="acquirer.button"/>
@@ -886,7 +886,12 @@
             </div>
         </div>
       </xpath>
-    </template>
+  </template>
+  <!-- hide oauth login buttons fro now -->
+    <template id="auth_oauth.login" inherit_id="web.login" name="OAuth Login buttons">
+            <xpath expr="//button[@type='submit']" position="before">
+            </xpath>
+        </template>
     <!--template id="homepage" name="Homepage" inherit_id="website.homepage">
       <xpath expr="//*[@id='wrap']" position="inside">
         <t t-foreach="main" t-as="mimgs">

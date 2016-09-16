@@ -50,6 +50,9 @@ def exp_send_email(db_name, uid, passwd, user_id, message):
 def exp_signup(db_name, uid, passwd, login, name, password, passconfirm, context=None):
     return _mobile_users_dispatch(db_name, 'mobile_signup', login, name, password, passconfirm, context)
 
+def exp_facebook_login(db_name, uid, passwd, profile, context=None):
+    return _mobile_users_dispatch(db_name, 'facebook_login', uid, profile, context)
+
 def exp_products(db_name, uid, passwd, page=0, search='', category=None, context=None):
     return _mobile_product_dispatch(db_name, 'products_list', uid, page, search, category, context)
 
@@ -94,6 +97,7 @@ def exp_logout(db_name, uid, passwd, userid, context=None):
 
 def dispatch(method, params):
     if method in ['signup',
+                  'facebook_login',
                   'products',
                   'profile',
                   'profile_update',

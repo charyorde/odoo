@@ -622,6 +622,7 @@ class product_template(models.Model):
         product_list = []
         if products:
             for product in products:
+                sellers = product.seller_ids.name.display_name
                 product_list.append({'id': product.id,
                                     'name': product.name,
                                     'price': product.list_price,
