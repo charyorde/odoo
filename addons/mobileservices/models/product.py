@@ -77,9 +77,9 @@ class product_template(models.Model):
     def products_list(self, cr, uid, page=0, search='', category=None, context=None):
         pool = self.pool
         post = dict()
-        _logger.info("cr in products_list %r" % cr)
-        _logger.info("request in products_list %r" % request)
         domain = self._get_search_domain(search, category, None) # attrib_values not supported yet
+        # We want only Greenwood products
+        domain += [('company_id', '=', 1)]
 
         pricelist = self.get_pricelist(cr, uid)
         product_obj = pool.get('product.template')
@@ -155,9 +155,20 @@ class product_template(models.Model):
             compute_currency = None
 
         values = {}
+        p = []
 
         if order:
+            for line in order.website_order_line:
+                p.append({
+                    'id': line.product_id.id,
+                    'price': line.product_id.lst_price,
+                    'name': line.product_id.name,
+                    'contract_term': line.product_id.contract_term,
+                    'product_imageurl': '{0}/web/binary/image?model=product.template&field=image_medium&id={1}'.format(config.settings()['mobile_virtual_host'], line.product_id.id),
+                })
+
             values.update({
+                'lines': p,
                 'order': {
                     'id': order.id,
                     'name': order.name,
@@ -179,7 +190,7 @@ class product_template(models.Model):
                     'payment_acquirer_id': order.payment_acquirer_id.id,
                     'picking_policy': order.picking_policy,
                     'shipped': order.shipped,
-                    'campaign_id': order.campaign_id.id,
+                    #'campaign_id': order.campaign_id.id,
                 }
             })
 
@@ -195,7 +206,7 @@ class product_template(models.Model):
             # values['suggested_products'] = _order._cart_accessories()
 
         # @todo serialize products in values['suggested_products']
-        return values
+        return {'sale_order': values }
 
     def sale_order_latest(self, cr, uid, partner_id, sale_order_id=None, update_pricelist=None, context=None):
         """ Get a user latest sale order.

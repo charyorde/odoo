@@ -886,9 +886,18 @@
             </div>
         </div>
       </xpath>
-  </template>
-  <!-- hide oauth login buttons fro now -->
+    </template>
+    <!-- hide oauth login buttons fro now -->
     <template id="auth_oauth.login" inherit_id="web.login" name="OAuth Login buttons">
+      <xpath expr="//button[@type='submit']" position="before">
+            </xpath>
+    </template>
+    <template id="auth_oauth.signup" inherit_id="auth_signup.signup" name="OAuth Signup buttons">
+            <xpath expr="//button[@type='submit']" position="before">
+            </xpath>
+        </template>
+
+        <template id="auth_oauth.reset_password" inherit_id="auth_signup.reset_password" name="OAuth Reset Password buttons">
             <xpath expr="//button[@type='submit']" position="before">
             </xpath>
         </template>

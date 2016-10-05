@@ -38,14 +38,10 @@
     </record>
     -->
     <!-- Top menu item -->
-    <!--
-    <menuitem name="website_greenwood" id="website_greenwood.menu_root"/>
-    -->
+    <menuitem name="Greenwood" id="website_greenwood.menu_root" groups="base.group_sale_manager"/>
     <!-- menu categories -->
-    <!--
-    <menuitem name="Menu 1" id="website_greenwood.menu_1" parent="website_greenwood.menu_root"/>
-    <menuitem name="Menu 2" id="website_greenwood.menu_2" parent="website_greenwood.menu_root"/>
-    -->
+    <menuitem name="Greenwood" id="website_greenwood.menu_greenwood" parent="website_greenwood.menu_root"/>
+    <menuitem name="Cheape" id="website_greenwood.menu_cheape" parent="website_greenwood.menu_root"/>
     <!-- actions -->
     <!--
     <menuitem name="List" id="website_greenwood.menu_1_list" parent="website_greenwood.menu_1"

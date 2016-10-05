@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+  <data>
+    <record id="view_cheape_livebid_form" model="ir.ui.view">
+      <field name="name">cheape.livebid.form</field>
+      <field name="model">cheape.livebid</field>
+      <field name="arch" type="xml">
+        <form string="Cheape Auction">
+          <sheet>
+            <group>
+              <group>
+                <field name="product_id"/>
+                <field name="start_time"/>
+                <field name="end_time"/>
+                <field name="islive"/>
+                <field name="status"/>
+                <field name="heartbeat"/>
+                <field name="countdown" readonly="1"/>
+              </group>
+              <group>
+                <field name="amount_totalbids" readonly="1"/>
+                <field name="raiser"/>
+                <field name="bidpacks_qty"/>
+                <field name="totalbids" readonly="1"/>
+                <field name="wonby"/>
+              </group>
+            </group>
+            <group string="Auto bids">
+              <field name="autobids" nolabel="1"/>
+            </group>
+          </sheet>
+        </form>
+      </field>
+    </record>
+    <record id="view_cheape_livebid_tree" model="ir.ui.view">
+      <field name="name">cheape.livebid.tree</field>
+      <field name="model">cheape.livebid</field>
+      <field name="arch" type="xml">
+        <tree string="Auctions">
+          <field name="product_id"/>
+          <field name="status"/>
+          <field name="islive"/>
+          <field name="start_time"/>
+          <field name="end_time"/>
+          <field name="countdown"/>
+          <field name="totalbids"/>
+        </tree>
+      </field>
+    </record>
+    <record id="action_cheape_livebid" model="ir.actions.act_window">
+      <field name="name">Cheape Auctions</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">cheape.livebid</field>
+      <field name="view_mode">tree,form</field>
+      <field name="view_type">form</field>
+      <!--<field name="help">Create auctions. Auctions can be live or upcoming</field>-->
+      <field name="view_id" ref="view_cheape_livebid_tree"/>
+    </record>
+    <record id="view_cheape_rewards_tree" model="ir.ui.view">
+      <field name="name">cheape.rewards.tree</field>
+      <field name="model">cheape.rewards</field>
+      <!--<field name="field_parent">child_ids</field>-->
+      <field name="arch" type="xml">
+        <tree string="Rewards">
+          <field name="name"/>
+          <field name="action"/>
+        </tree>
+      </field>
+    </record>
+    <record id="action_cheape_rewards" model="ir.actions.act_window">
+      <field name="name">Cheape Rewards</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">cheape.rewards</field>
+      <field name="view_type">form</field>
+      <field name="view_mode">tree,form</field>
+      <field name="view_id" ref="view_cheape_rewards_tree"/>
+    </record>
+    <menuitem id="menu_cheape_livebid" parent="website_greenwood.menu_cheape" action="action_cheape_livebid"/>
+    <menuitem id="menu_cheape_rewards" parent="website_greenwood.menu_cheape" action="action_cheape_rewards"/>
+  </data>
+</openerp>

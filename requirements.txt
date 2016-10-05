@@ -41,3 +41,5 @@ wsgiref==0.1.2
 xlwt==0.7.5
 cfenv==0.5.2
 python-gcm==0.4
+kombu==3.0.35
+socketIO-client==0.7.0

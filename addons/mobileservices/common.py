@@ -11,4 +11,10 @@ def send_push_notification(user_id, message):
     gcm = GCM(config.settings()['gcm_'])
     pass
 
+def verify_email(params):
+    """ Validates a verification code. Checks whether the code
+    matches the user and the device.
+    Sends push notification to user device id """
+    pass
+
 

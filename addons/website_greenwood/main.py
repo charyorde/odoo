@@ -25,7 +25,16 @@ class Config():
         if os.environ.get('PLATFORM'):
             env = dict(name='PROD', swift_token='')
         elif os.environ.get('CLOUD'):
-            env = dict(name='CLOUD', swift_token='')
+            env = dict(name='CLOUD',
+                       swift_token='',
+                       swift_token='AUTH_tk0f21e7a5bef445e99b7eb275b836ea7a',
+                       swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin',
+                       gcm_sender_id='',
+                       gcm_apikey='',
+                       amqpurl='amqp://test:Wordpass15@192.168.10.29:5672/',
+                       sio_server_host='sios.apps.greenwood.ng',
+                       sio_server_port=80,
+                       )
         elif os.environ.get('DEV'):
             env = dict(name='dev', swift_token='')
         elif os.environ.get('DEV_STAGING'):
@@ -33,13 +42,21 @@ class Config():
                        swift_token='AUTH_tk0f21e7a5bef445e99b7eb275b836ea7a',
                        swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin',
                        gcm_sender_id='',
-                       gcm_apikey='',)
+                       gcm_apikey='',
+                       amqpurl='amqp://test:Wordpass15@192.168.10.29:5672/',
+                       sio_server_host='sios.apps.yookore.net',
+                       sio_server_port=80,
+                       )
         else:
             env = dict(name='local',
                        swift_token='AUTH_tk0f21e7a5bef445e99b7eb275b836ea7a',
                        swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin',
                        gcm_sender_id='',
-                       gcm_apikey='')
+                       gcm_apikey='',
+                       amqpurl='amqp://guest:guest@localhost:5672/',
+                       sio_server_host='0.0.0.0',
+                       sio_server_port=5000,
+                       )
         return env
 
     def settings(self):

@@ -873,3 +873,61 @@ class Service(http.Controller):
 
         pass
 
+settings = config.settings()
+def bet():
+    from socketIO_client import SocketIO, LoggingNamespace
+    logging.getLogger('socketIO-client').setLevel(logging.DEBUG)
+    with SocketIO(settings.get('sio_server_host'), settings.get('sio_server_port'), LoggingNamespace) as socketIO:
+        while True:
+            for n in reversed(xrange(10)):
+                socketIO.emit('livebet', {
+                    'd': 'gw8',
+                    'livebid_id': n,
+                   'partner_id': 8,
+                    'product_id': 6
+                })
+                gevent.sleep(3)
+                if n is 7:
+                    n = 10
+                    break
+
+# publish to client
+def publish():
+    from socketIO_client import SocketIO, LoggingNamespace
+    logging.getLogger('socketIO-client').setLevel(logging.DEBUG)
+    with SocketIO(settings.get('sio_server_host'), settings.get('sio_server_port'), LoggingNamespace) as socketIO:
+        while True:
+            for n in reversed(xrange(10)):
+                socketIO.emit('countdown', {'message': {'livebid_id': n}})
+                gevent.sleep(3)
+                if n is 7:
+                    n = 10
+                    break
+
+def consume():
+    while True:
+        import kombu
+        from kombu.mixins import ConsumerMixin
+        from kombu import Connection, Exchange, Consumer, Queue
+        connection = Connection(settings.get('amqpurl'))
+        exchange = Exchange('socketio_forwarder', type='direct', durable=True)
+        queue = Queue('', exchange, routing_key='forwarder')
+
+        def process_bet(body, message):
+            _logger.info("RECEIVED MESSAGE: %r" % (body, ))
+            print("RECEIVED MESSAGE: %r" % (body, ))
+            message.ack()
+
+#consumer = Consumer(connection.channel(), queues=queue, accept=['json', 'pickle'], callbacks=[process_bet])
+        consumer = Consumer(connection.channel(), queues=queue, callbacks=[process_bet])
+
+        with connection as conn:
+            with consumer:
+                conn.drain_events()
+if openerp.evented:
+    # gevent mode
+    import gevent
+    gevent.spawn(consume) # use start() instead so that it runs on the main thread
+    #gevent.spawn(publish)
+    #gevent.spawn(bet)
+

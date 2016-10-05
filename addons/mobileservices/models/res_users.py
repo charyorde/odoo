@@ -1,5 +1,7 @@
 import logging
 import json
+import time
+import random
 
 import openerp
 from openerp import models, fields, api
@@ -7,12 +9,16 @@ from openerp.addons.auth_signup.res_users import SignupError
 from openerp import SUPERUSER_ID
 from openerp.http import request
 
+from hashids import Hashids
+
 _logger = logging.getLogger(__name__)
 
 
 class res_users(models.Model):
     _name = 'res.users'
     _inherit = 'res.users'
+
+    userhash = fields.Char(help="A unique hash per user")
 
     def mobile_signup(self, cr, uid, login, name, password, passconfirm, context=None):
         pool = self.pool
@@ -30,8 +36,40 @@ class res_users(models.Model):
         }
         values.update(config)
         db, login, password = pool['res.users'].signup(cr, SUPERUSER_ID, values, None)
+        user_id = self.search(cr, uid, [('login', '=', login)], context=context)
+        if user_id:
+            userhash = self._generate_userhash()
+            pool['res.users'].write(cr, SUPERUSER_ID, user_id, {'userhash': userhash}, context=context)
         cr.commit()
         return [db, login, password] if all([k for k in [db, login, password]]) else None
+
+    def _generate_userhash(self):
+        salt = fields.Datetime.now()
+        hashids = Hashids(min_length=6, salt=salt)
+        #return hashids.encode(int(time.time()), int('%.0f' % random.random()))
+        return hashids.encode(int(time.time()), random.randint(1, int(time.time())))
+
+    def create_userhash(self, cr, uid, user_id, context=None):
+        """ Create userhash if user has none """
+        userhash = self._generate_userhash()
+        values = {
+            'userhash': userhash,
+        }
+        return self.pool['res.users'].write(cr, SUPERUSER_ID, [user_id], values, context=context)
+
+    def change_username(self, cr, uid, username, context=None):
+        try:
+            self._validate_userhash(cr, uid, username, context=context)
+            validated = True
+        except AssertionError as e:
+            validated = False
+        return validated
+
+    def _validate_userhash(self, cr, uid, value, context=None):
+        userid = self.search(self, cr, uid, ['userhash', '=', value], context=context)
+        #user = self.browse(cr, uid, [userid])
+        #assert user.exists(), 'Username already exists'
+        assert userid, 'Username already exists'
 
     def mobile_reset_password(self, uid):
         # Should we just use the web reset_password?

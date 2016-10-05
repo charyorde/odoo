@@ -92,6 +92,12 @@ def exp_profile_update(db_name, uid, passwd, partner_id, post, context=None):
 def exp_post_file(db_name, uid, passwd, user_id, filename, data):
     return _mobile_partner_dispatch(db_name, 'postFile', user_id, filename, data)
 
+def exp_create_userhash(db_name, uid, passwd, user_id, context=None):
+    return _mobile_users_dispatch(db_name, 'create_userhash', user_id, context)
+
+def exp_verify_email(db_name, uid, passwd, params, context=None):
+    return getattr(common, 'verify_email')(user_id, message)
+
 def exp_logout(db_name, uid, passwd, userid, context=None):
     return _mobile_partner_dispatch(db_name, 'logout', uid, userid, context)
 
@@ -113,6 +119,8 @@ def dispatch(method, params):
                   'country_states',
                   'product_cart_delete',
                   'send_email',
+                  'create_userhash',
+                  'verify_email',
                   'logout',
                   ]:
         (db, uid, passwd) = params[0:3]
