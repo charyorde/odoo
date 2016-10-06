@@ -20,7 +20,7 @@ class res_users(models.Model):
 
     userhash = fields.Char(help="A unique hash per user")
 
-    def mobile_signup(self, cr, uid, login, name, password, passconfirm, context=None):
+    def mobile_signup(self, cr, uid, post, context=None):
         pool = self.pool
         icp = pool['ir.config_parameter']
         config = {
@@ -28,15 +28,15 @@ class res_users(models.Model):
             'reset_password_enabled': icp.get_param(cr, SUPERUSER_ID, 'auth_signup.reset_password') == 'True',
         }
         values = {
-            'login': login,
-            'name': name,
-            'password': password,
-            'confirm_password': passconfirm,
+            'login': post.get('email'),
+            'name': post.get('name'),
+            'password': post.get('password'),
+            'confirm_password': post.get('confirmpass'),
             'token': None,
         }
         values.update(config)
         db, login, password = pool['res.users'].signup(cr, SUPERUSER_ID, values, None)
-        user_id = self.search(cr, uid, [('login', '=', login)], context=context)
+        user_id = self.search(cr, SUPERUSER_ID, [('login', '=', values['login'])], context=context)
         if user_id:
             userhash = self._generate_userhash()
             pool['res.users'].write(cr, SUPERUSER_ID, user_id, {'userhash': userhash}, context=context)

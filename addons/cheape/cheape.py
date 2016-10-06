@@ -2,6 +2,7 @@ import logging
 import copy
 import ast
 import select
+import simplejson
 
 import gevent
 from gevent import Greenlet
@@ -37,11 +38,27 @@ class BidTask(Greenlet):
     def __call__(self):
         Greenlet.__init__(self, run=self.task(id(getcurrent())))
 
+    def _update_listener(self):
+        with openerp.sql_db.db_connect('postgres').cursor() as cr:
+            conn = cr._cnx
+            cr.execute("LISTEN livebid_update;")
+            cr.commit();
+            while True:
+                if select.select([conn], [], [], 1) == ([],[],[]):
+                    pass
+                else:
+                    conn.poll()
+                    while conn.notifies:
+                        _logger.info("LIVEBID UPDATE RECEIVED: %r" % simplejson.loads(conn.notifies.pop().payload))
+                        data = simplejson.loads(conn.notifies.pop().payload)
+                        if data.get('name') == self.bid.get('name'):
+                            self.bid = data
+
     def task(self, current_livebid):
         _logger.info("BidTask.task listen livebet on db postgres")
+        self._update_listener()
         t = local()
-        #t = self.bid.get('countdown')
-        t = self.bid.countdown
+        t = self.bid.get('countdown')
         countdown_range = ['00:00:10', '00:00:09', '00:00:08', '00:00:07', '00:00:06', '00:00:05', '00:00:04', '00:00:03', '00:00:02', '00:00:01', '00:00:00']
         with openerp.sql_db.db_connect('postgres').cursor() as cr:
             # Retrieve the connection
@@ -212,12 +229,19 @@ class LiveBid(object):
                 else:
                     conn.poll()
                     while conn.notifies:
-                        _logger.info("DB NOTIFICATION RECEIVED" % conn.notifies.pop().payload)
+                        _logger.info("DB NOTIFICATION RECEIVED: %r" % simplejson.loads(conn.notifies.pop().payload))
+                        try:
+                            livebid_record = simplejson.loads(conn.notifies.pop().payload)
+                            g = [gevent.spawn(BidTask(livebid_record))]
+                            _logger.info("Today's livebid %r" % g)
+                            if g:
+                                gevent.joinall(g)
+                        except Exception as e:
+                            _logger.info("Failed to load today's auction %r" % e)
 
 db_name = openerp.tools.config['db_name']
 if openerp.evented:
     gevent.spawn(LiveBid().listen(db_name))
-    #LiveBid().listen(db_name)
     #gevent.spawn(consume) # use start() instead so that it runs on the main thread
     #gevent.spawn(consume_socket)
     #gevent.spawn(C(connection).run())

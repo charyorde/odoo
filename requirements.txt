@@ -43,3 +43,4 @@ cfenv==0.5.2
 python-gcm==0.4
 kombu==3.0.35
 socketIO-client==0.7.0
+hashids==1.1.0

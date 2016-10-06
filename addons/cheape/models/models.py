@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
-
+import logging
 import simplejson
 import math
 from datetime import timedelta
+import random
+import time
 
 import openerp
 from openerp import models, fields, api
 from openerp import SUPERUSER_ID
+
+from hashids import Hashids
+
+_logger = logging.getLogger(__name__)
 
 def json_dump(v):
     return simplejson.dumps(v, separators=(',', ':'))
@@ -138,7 +144,10 @@ class livebid(models.Model):
     """ A live auction """
     _name = 'cheape.livebid'
 
+    name = fields.Char(help="A unique livebid name")
     product_id = fields.Many2one('product.template', string="Product", required=True)
+    power_switch = fields.Selection(
+        [('start', 'Start'),('stop', 'Stop')], string="Power Switch", help="Switch the state of a livebid")
     islive = fields.Boolean(string="IsLive", index=True, default=False, help="Power on/off this livebid")
     # Is the livebid open or closed
     status = fields.Selection([('open', 'Open'),('closed', 'Closed'),], string="Status", default="closed",
@@ -171,7 +180,8 @@ class livebid(models.Model):
     def _onchange_auction_time(self):
         start_secs = int(self.start_time)
         end_secs = int(self.end_time)
-        self.countdown = int(sum([start_secs, end_secs]))
+        #self.countdown = int(sum([start_secs, end_secs]))
+        self.countdown = int(reduce(lambda x, y: x-y, [end_secs, start_secs]))
 
     @api.depends('start_time', 'end_time')
     def _compute_countdown(self):
@@ -185,14 +195,94 @@ class livebid(models.Model):
         hr = timedelta(hours=hour, minutes=00)
         return hr.total_seconds()
 
+    def create(self, cr, uid, params, context=None):
+        _logger.info("livebid create %r" % params)
+        pool = self.pool
+        livebid_name_obj = pool['cheape.livebid.name']
+        params['name'] = ''
+        islive = params.get('islive')
+        if islive:
+            livebid_name = livebid_name_obj._generate_livebid_name()
+            params['name'] = livebid_name
+        record = super(livebid, self).create(cr, uid, params, context=context)
 
-    #def create(self, cr, uid, params, context=None):
-    #    record = self.create(params)
-        #livebid = BidTask()
-        #BidTask().start().join()
-        #self.write({'greenletid': id(livebid.getcurrent())})
-        #livebid.start().join()
-    #    return record
+        # create livebid_name only when islive is True
+        if islive:
+            livebid_name_obj.create(cr, uid, {'name': livebid_name, 'livebid_id':record}, context=context)
+
+        livebid_name_ids = livebid_name_obj.search(cr, uid, [])
+        _logger.info("livebid_name_ids %r" % livebid_name_ids)
+        livebid_names = livebid_name_obj.browse(cr, uid, livebid_name_ids, context=context)
+        names = [name.name for name in livebid_names]
+        _logger.info("livebid_names %r" % names)
+
+        with openerp.sql_db.db_connect('postgres').cursor() as cr2:
+            #cr2.execute("notify cheape_livebid, %s", (json_dump(params),))
+            if islive:
+                cr2.execute("notify cheape_livebid, %s", (simplejson.dumps(params),))
+        return record
+
+    def write(self, cr, uid, ids, data, context=None):
+        _logger.info("livebid update %r" % data)
+        livebid_obj = self.pool['cheape.livebid']
+        livebid_name_obj = self.pool['cheape.livebid.name']
+        result = super(livebid, self).write(cr, uid, ids, data, context=context) # return Boolean
+        row = self.browse(cr, uid, ids)
+        # if no livebid_name & islive is True,
+        # create a new thread, update livebid with a livebid_name
+        if not row.name and row.islive:
+            livebid_name = livebid_name_obj._generate_livebid_name()
+            livebid_obj.write(cr, uid, ids, {'name': livebid_name})
+            record = self.browse(cr, uid, ids)
+            autobids = []
+            if record.autobids:
+                for autobid in autobids:
+                    autobids.append(autobid.livebid_id)
+
+            values = {
+                'name': record.name,
+                'status': record.status,
+                'bidpacks_qty': record.bidpacks_qty,
+                'product_id': record.product_id.id,
+                'start_time': record.start_time,
+                'raiser': record.raiser,
+                'end_time': record.end_time,
+                'autobids': autobids,
+                'islive': record.islive,
+                'heartbeat': record.heartbeat,
+                'wonby': record.wonby.id,
+                'power_switch': record.power_switch,
+            }
+
+            with openerp.sql_db.db_connect('postgres').cursor() as cr2:
+                cr2.execute("notify cheape_livebid, %s", (simplejson.dumps(record),))
+        elif row.name and row.islive:
+            # notify BidTask of livebid update
+            record = self.browse(cr, uid, ids)
+            autobids = []
+            if record.autobids:
+                for autobid in autobids:
+                    autobids.append(autobid.livebid_id)
+
+            values = {
+                'name': record.name,
+                'status': record.status,
+                'bidpacks_qty': record.bidpacks_qty,
+                'product_id': record.product_id.id,
+                'start_time': record.start_time,
+                'raiser': record.raiser,
+                'end_time': record.end_time,
+                'autobids': autobids,
+                'islive': record.islive,
+                'heartbeat': record.heartbeat,
+                'wonby': record.wonby.id,
+                'power_switch': record.power_switch,
+            }
+            _logger.info("VALUES %r" % values)
+            with openerp.sql_db.db_connect('postgres').cursor() as cr2:
+                cr2.execute("notify livebid_update, %s", (simplejson.dumps(record),))
+
+        return result
 
     def _get_todays_auction(self, cr, uid, context=None):
         livebid_ids = self.search(cr, uid, [('islive', '=', True)], context=context)
@@ -200,6 +290,19 @@ class livebid(models.Model):
 
     def off(self, cr, uid, ids):
         self.write(cr, uid, ids, {'islive': False})
+
+
+class livebid_name(models.Model):
+    _name = 'cheape.livebid.name'
+
+    name = fields.Char()
+    livebid_id = fields.Many2one('cheape.livebid', string="The livebid", required=True)
+
+    def _generate_livebid_name(self):
+        salt = fields.Datetime.now()
+        hashids = Hashids(min_length=5, salt=salt)
+        return hashids.encode(int(time.time()), random.randint(1, int(time.time())))
+
 
 class watchlist(models.Model):
     _name = 'cheape.watchlist'

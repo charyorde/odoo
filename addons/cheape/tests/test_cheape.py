@@ -19,3 +19,9 @@ class TestLivebid(TransactionCase):
 
         _logger.info("record %r" % record)
         self.assertIsNotNone(record)
+
+    def test_livebid_countdown_list(self):
+        cr, uid = self.cr, self.uid
+        countdowns = self.cheape_livebid_model.search(cr, uid, [])
+        _logger.info("record %r" % len(countdowns))
+        self.assertIsNotNone(countdowns)
