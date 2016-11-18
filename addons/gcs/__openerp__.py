@@ -1,32 +1,34 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "cheape",
+    'name': "gcs",
 
     'summary': """
-        Online bargain buying engine""",
+        Short (1 phrase/line) summary of the module's purpose, used as
+        subtitle on modules listing or apps.openerp.com""",
 
     'description': """
-        Online bargain buying engine. A product of Huntrecht inc.
+        Long description of module's purpose
     """,
 
-    'author': "Greenwood",
-    'website': "http://www.greenwood.ng",
+    'author': "Your Company",
+    'website': "http://www.yourcompany.com",
 
     # Categories can be used to filter modules in modules listing
     # Check https://github.com/odoo/odoo/blob/master/openerp/addons/base/module/module_data.xml
     # for the full list
-    'category': 'Technical Settings',
+    'category': 'Uncategorized',
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['website_sale'],
+    'depends': ['base'],
 
     # always loaded
     'data': [
         # 'security/ir.model.access.csv',
         'templates.xml',
-        'views/views.xml'
     ],
-    'installable': True,
-    'application': True,
+    # only loaded in demonstration mode
+    'demo': [
+        'demo.xml',
+    ],
 }

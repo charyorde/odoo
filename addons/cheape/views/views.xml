@@ -4,6 +4,7 @@
     <record id="view_cheape_livebid_form" model="ir.ui.view">
       <field name="name">cheape.livebid.form</field>
       <field name="model">cheape.livebid</field>
+      <field name="mode">primary</field>
       <field name="arch" type="xml">
         <form string="Cheape Auction">
           <sheet>
@@ -36,6 +37,7 @@
     <record id="view_cheape_livebid_tree" model="ir.ui.view">
       <field name="name">cheape.livebid.tree</field>
       <field name="model">cheape.livebid</field>
+      <field eval="7" name="priority"/>
       <field name="arch" type="xml">
         <tree string="Auctions">
           <field name="product_id"/>
