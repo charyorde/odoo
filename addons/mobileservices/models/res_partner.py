@@ -17,10 +17,16 @@ class res_partner(models.Model):
     _name = 'res.partner'
     _inherit = 'res.partner'
 
-    def profile_get(self, cr, uid, context=None):
+    def profile_get(self, cr, uid, partner_id=None, context=None):
         pool = self.pool
         users = pool['res.users']
-        partner = users.browse(cr, SUPERUSER_ID, uid, context=context).partner_id
+        if partner_id:
+            partner = self.browse(cr, SUPERUSER_ID, [partner_id], context=context)
+            if not uid:
+                uid = partner.user_id.id
+        else:
+            user = users.browse(cr, SUPERUSER_ID, uid, context=context)
+            partner = users.browse(cr, SUPERUSER_ID, uid, context=context).partner_id
         values = {
             'id': partner.id,
             'name': partner.name,
@@ -43,7 +49,8 @@ class res_partner(models.Model):
             'lang': partner.lang,
             'phone': partner.phone,
             'mobile': partner.mobile,
-            'uid': partner.user_id.id,
+            #'uid': partner.user_id.id,
+            'uid': uid,
             'birthdate': partner.birthdate,
             'notify_email': partner.notify_email,
             'opt_out': partner.opt_out,
@@ -66,16 +73,34 @@ class res_partner(models.Model):
             'annual_income': partner.annual_income,
             'credit_info': self.get_credit_score(cr, uid, context=context),
             'score_interpretation': partner.score_interpretation,
+            'gcm_token': user.gcm_token,
+            'apn_token': user.apn_token,
+            'username': user.userhash
         }
 
         return values
 
     def profile_update(self, cr, partner_id, post, context=None):
+        """
+        :returns: bool
+        """
         pool = self.pool
         partner_obj = pool['res.partner']
 
-        post['debit_date'] = _datetime_from_string(post['debit_date'])
         _logger.info("post %r" % post)
+        user_update = True if 'userhash' or 'gcm_token' or 'apn_token' in post.keys() else None
+        # if any of gcm_token, apn_token, username in post
+        if user_update:
+            user_id = pool['res.users'].search(cr, uid, ['partner_id', '=', partner_id])
+            user = self.browse(cr, uid, user_id, context=context)
+            values = post.copy()
+            userhash = post.get('userhash')
+            if userhash:
+                values['username'] = userhash
+            return user.write(cr, uid, values)
+
+        if post.get('debit_date'):
+            post['debit_date'] = _datetime_from_string(post['debit_date'])
 
         # Recompute credit affordability
         partner = partner_obj.browse(cr, SUPERUSER_ID, partner_id, context=context)

@@ -568,7 +568,8 @@ class product_template(models.Model):
         for so in order:
             if so.state != 'draft':
                 raise osv.except_osv(_('Error!'), _('It is forbidden to modify a sale order which is not in draft status'))
-            if line_id != False:
+            # if line_id != False:
+            if line_id:
                 line_ids = so._cart_find_product_line(product_id, line_id, context=context, **kwargs)
                 if line_ids:
                     # Item is already in cart

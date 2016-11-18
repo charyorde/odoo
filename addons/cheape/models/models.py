@@ -55,12 +55,40 @@ class cheape_account(models.Model):
     _inherit = 'res.partner'
 
     #partner_id = fields.Many2one('res.partner', string='Partner', required=True, readonly=True)
-    #bidswon = fields.One2many('cheape.livebid', 'wonby', help="A list of live bids won by the current user")
-    bidswon = fields.Many2many('cheape.livebid', compute='_my_bidswon', store=False, readonly=True, help="A list of live bids won by the current user")
+    bidswon = fields.One2many('cheape.livebid', 'wonby', help="A list of live bids won by the current user")
+    #bidswon = fields.Many2many('cheape.livebid', compute='_my_bidswon', store=False, readonly=True, help="A list of live bids won by the current user")
     bidscount = fields.Integer(string="My bids", default=0, required=True, help="Total number of a user's purchased bids")
     # A list of the current user's watchlist
-    #watchlist_ids = fields.One2many('cheape.watchlist', 'partner_id', help="A list of the current user's watchlist")
-    watchlist_ids = fields.Many2many('cheape.watchlist', compute='_my_watchlist', store=False, readonly=True, help="A list of the current user's watchlist")
+    watchlist_ids = fields.One2many('cheape.watchlist', 'partner_id', help="A list of the current user's watchlist")
+    #watchlist_ids = fields.Many2many('cheape.watchlist', compute='_my_watchlist', store=False, readonly=True, help="A list of the current user's watchlist")
+
+    def bid_history(self, cr, uid, partner_id, context=None):
+        pool, values = self.pool, []
+        partner = self.browse(cr, uid, [partner_id], context=context)
+        #wonbids = pool['cheape.livebid'].search(cr, uid, [('wonby', '=', int(partner_id))], context=context)
+        #_logger.info("%s bid history %s" % (partner_id, wonbids))
+        _logger.info("%s bid history %s" % (partner_id, partner.bidswon))
+        livebids = partner.bidswon
+        if livebids:
+            # wonbids.bidswon
+            for l in livebids:
+                values.append({
+                    'product_id': l.product_id.id,
+                    'name': l.product_id.name,
+                    'bid_total': l.product_id.bid_total
+                })
+        return values
+
+    def topup_bidpacks(self, cr, uid, data, context=None):
+        login = data.get('login')
+        userid = self.pool['res.users'].search(cr, uid, [('login', '=', login)], context=context)
+        user = self.pool['res.users'].browse(cr, uid, userid, context=context)
+        partner_id = user.partner_id.id
+        partner = self.browse(cr, uid, [partner_id], context=context)
+        values = {
+            'bidscount': sum([partner.bidscount, data.get('qty')])
+        }
+        return self.write(cr, uid, [partner_id], values)
 
     def reduce_bidpacks(self, cr, uid, partner_id, qty, context=None):
         """ Reduce user's bidpacks by x amount """
@@ -102,16 +130,15 @@ class bet(models.Model):
     """ A cheape bet """
     _name = 'cheape.bet'
 
-    livebid_id = fields.Many2one('cheape.livebid', string="The livebid", readonly=True)
+    livebid_id = fields.Many2one('cheape.livebid', string="The livebid", readonly=True, ondelete='cascade')
     product_id = fields.Many2one('product.template', string="Product", readonly=True)
     partner_id = fields.Many2one('res.partner', string="Customer", readonly=True)
-    #livebid_identity = fields.Integer(string="The Greenlet id", required=True, default=0, index=True)
 
-    def bet(self, cr, uid, values):
-        record = self.create(cr, uid, values)
+    #def bet(self, cr, uid, values):
+        #record = self.create(cr, uid, values)
         # Update product_template. with new bidprice
         # reset livebid.countdown and publish message back to client
-        return record
+        #return record
 
     def livebet(self, cr, uid, values, context=None):
         partner_obj = self.pool['res.partner']
@@ -125,7 +152,7 @@ class bet(models.Model):
 
         record = self.create(cr, uid, values)
         # Increment totalbids spent on this livebid
-        totalbids = sum(livebid.totalbids + 1)
+        totalbids = livebid.totalbids + 1
         livebid_obj.write(cr, uid, [values['livebid_id']], {'totalbids': totalbids}, context=context)
         # @todo publish totalbids for autobot to act upon
         cr.commit()
@@ -145,9 +172,9 @@ class livebid(models.Model):
     _name = 'cheape.livebid'
 
     name = fields.Char(help="A unique livebid name")
-    product_id = fields.Many2one('product.template', string="Product", required=True)
+    product_id = fields.Many2one('product.template', domain=[('company_id.name', '=', 'Cheape')], string="Product", required=True)
     power_switch = fields.Selection(
-        [('start', 'Start'),('stop', 'Stop')], string="Power Switch", help="Switch the state of a livebid")
+        [('on', 'On'),('off', 'Off')], string="Power Switch", help="Switch the state of a livebid")
     islive = fields.Boolean(string="IsLive", index=True, default=False, help="Power on/off this livebid")
     # Is the livebid open or closed
     status = fields.Selection([('open', 'Open'),('closed', 'Closed'),], string="Status", default="closed",
@@ -165,6 +192,10 @@ class livebid(models.Model):
     bidpacks_qty = fields.Integer(string="Bidpacks per bid", default=1, help="The quantity of bidpacks per bid required on this livebid")
     autobids = fields.One2many('cheape.autobid', 'livebid_id', help="A list of autobids on this livebid")
     totalbids = fields.Integer(string="Total bids", help="The total bids placed since live bid begun")
+
+    _sql_constraints = [
+        ('product_id_uniq', 'UNIQUE(product_id)', 'A livebid product_id must be unique!'),
+    ]
 
     @api.depends('product_id')
     def _compute_amount_totalbids(self):
@@ -200,14 +231,18 @@ class livebid(models.Model):
         pool = self.pool
         livebid_name_obj = pool['cheape.livebid.name']
         params['name'] = ''
-        islive = params.get('islive')
-        if islive:
+        #islive = params.get('islive')
+        power = params.get('power_switch')
+        if power == 'on':
             livebid_name = livebid_name_obj._generate_livebid_name()
             params['name'] = livebid_name
         record = super(livebid, self).create(cr, uid, params, context=context)
+        if record:
+            new_record = self.browse(cr, uid, [record])
+            params['countdown'] = new_record.countdown
 
         # create livebid_name only when islive is True
-        if islive:
+        if power == 'on':
             livebid_name_obj.create(cr, uid, {'name': livebid_name, 'livebid_id':record}, context=context)
 
         livebid_name_ids = livebid_name_obj.search(cr, uid, [])
@@ -218,7 +253,7 @@ class livebid(models.Model):
 
         with openerp.sql_db.db_connect('postgres').cursor() as cr2:
             #cr2.execute("notify cheape_livebid, %s", (json_dump(params),))
-            if islive:
+            if power == 'on':
                 cr2.execute("notify cheape_livebid, %s", (simplejson.dumps(params),))
         return record
 
@@ -230,7 +265,7 @@ class livebid(models.Model):
         row = self.browse(cr, uid, ids)
         # if no livebid_name & islive is True,
         # create a new thread, update livebid with a livebid_name
-        if not row.name and row.islive:
+        if not row.name and row.power_switch == 'on':
             livebid_name = livebid_name_obj._generate_livebid_name()
             livebid_obj.write(cr, uid, ids, {'name': livebid_name})
             record = self.browse(cr, uid, ids)
@@ -255,8 +290,8 @@ class livebid(models.Model):
             }
 
             with openerp.sql_db.db_connect('postgres').cursor() as cr2:
-                cr2.execute("notify cheape_livebid, %s", (simplejson.dumps(record),))
-        elif row.name and row.islive:
+                cr2.execute("notify cheape_livebid, %s", (simplejson.dumps(values),))
+        elif row.name and row.power_switch == 'on':
             # notify BidTask of livebid update
             record = self.browse(cr, uid, ids)
             autobids = []
@@ -280,7 +315,7 @@ class livebid(models.Model):
             }
             _logger.info("VALUES %r" % values)
             with openerp.sql_db.db_connect('postgres').cursor() as cr2:
-                cr2.execute("notify livebid_update, %s", (simplejson.dumps(record),))
+                cr2.execute("notify livebid_update, %s", (simplejson.dumps(values),))
 
         return result
 
@@ -290,6 +325,35 @@ class livebid(models.Model):
 
     def off(self, cr, uid, ids):
         self.write(cr, uid, ids, {'islive': False})
+
+    def _livebid_by_product(cr, uid, product_id):
+        record = self.browse(cr, uid, [product_id])
+        values = {
+            'name': record.name,
+            'status': record.status,
+            'start_time': record.start_time,
+            'end_time': record.end_time,
+            'autobids': autobids,
+            'islive': record.islive,
+            'heartbeat': record.heartbeat,
+            'wonby': record.wonby.id,
+            'power_switch': record.power_switch,
+        }
+        return values
+
+    def machina_bid(self, cr, uid, data):
+        livebet_obj = self.pool['cheape.bet']
+        # partners in group machinas
+        machinas = None
+        # Random selection of a machina
+        machina = None
+        lb_id = data.get('livebid_id')
+        record = self.browse(cr, uid, [lb_id])
+        # @todo Test for required total players
+        current_auction_price = record.product_id.bid_total
+        if current_auction_price < record.product_id.max_bid_total:
+            values = {}
+            livebet_obj.livebet(cr, uid, values)
 
 
 class livebid_name(models.Model):
@@ -310,10 +374,18 @@ class watchlist(models.Model):
     product_id = fields.Many2one('product.template', string="Product", readonly=True)
     partner_id = fields.Many2one('res.partner', string="Customer", readonly=True)
 
+    def create(self, cr, uid, values, context=None):
+        return super(watchlist, self).create(cr, uid, values, context=context)
+
+    def my_watchlist(self, cr, uid, partner_id, context=None):
+        return self.browse(cr, uid, [partner_id]).watchlist_ids
+
+
 class rewards(models.Model):
     """ Definition of available rewards that a user can earn """
     _name = 'cheape.rewards'
 
+    label = fields.Char(string="Label", help="Reward identifier")
     name = fields.Char(string="Goal")
     action = fields.Char(string="Challenge")
 
@@ -322,6 +394,11 @@ class rewards(models.Model):
         # Only rewards unearned by user
         return allrewards.filtered(lambda r: r.name not in rewards)
 
+    def _get_reward(self, cr, uid, action, context=None):
+        rewards = self.browse(cr, uid, [], context=context)
+        return rewards.filtered(lambda r: r.action == action)
+
+
 class reward(models.Model):
     _name = 'cheape.reward'
 
@@ -329,16 +406,18 @@ class reward(models.Model):
     partner_id = fields.Many2one('res.partner', string="Customer", readonly=True)
     action = fields.Char(string="Challenge", help="Action or Challenge performed by user")
 
-    def unlock_reward(self, cr, uid, params, context=None):
+    def create(self, cr, uid, params, context=None):
         """ Assign reward to partner """
         login = params.get('login')
         values = params.copy()
         # Get user by login
         userid = self.pool['res.users'].search(cr, uid, [('login', '=', login)], context=context)
         user = self.pool['res.users'].browse(cr, uid, userid, context=context)
-        values['partner_id'] = user.partner_id.id
+        partner_id = user.partner_id.id
+        values['partner_id'] = partner_id
         del values['login']
-        return self.write(cr, uid, values, context=context)
+        #return self.write(cr, uid, [partner_id], values, context=context)
+        return super(reward, self).create(cr, uid, values, context=context)
 
     def partner_rewards(self, cr, uid, partner_id, context=None):
         """ Get user earned rewards """
@@ -350,7 +429,7 @@ class autobid(models.Model):
     conf = {'uid': 3, livebid_id: 4, num_of_bids: 1000, display_name: ''} """
     _name = 'cheape.autobid'
 
-    livebid_id = fields.Many2one('cheape.livebid', string="The livebid", required=True)
+    livebid_id = fields.Many2one('cheape.livebid', string="The livebid", required=True, ondelete='cascade')
     partner_id = fields.Many2one('res.partner', string="Customer", required=True)
     #conf = fields.Char(string="Autobid config", help="The autobid config")
     num_of_bids = fields.Integer(help="")

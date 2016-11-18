@@ -50,6 +50,9 @@ def exp_send_email(db_name, uid, passwd, user_id, message):
 def exp_signup(db_name, uid, passwd, post, context=None):
     return _mobile_users_dispatch(db_name, 'mobile_signup', uid, post, context)
 
+def exp_mobile_login(db_name, uid, passwd, post, context=None):
+    return _mobile_users_dispatch(db_name, 'mobile_login', uid, post, context)
+
 def exp_facebook_login(db_name, uid, passwd, profile, context=None):
     return _mobile_users_dispatch(db_name, 'facebook_login', uid, profile, context)
 
@@ -83,8 +86,8 @@ def exp_country_states(db_name, uid, passwd, country_id):
 def exp_get_credit_score(db_name, uid, passwd, user_id, context=None):
     return _mobile_partner_dispatch(db_name, 'get_credit_score', user_id, context)
 
-def exp_profile(db_name, uid, passwd, userid, context=None):
-    return _mobile_partner_dispatch(db_name, 'profile_get', userid, context)
+def exp_profile(db_name, uid, passwd, userid, partner_id=None, context=None):
+    return _mobile_partner_dispatch(db_name, 'profile_get', userid, partner_id, context)
 
 def exp_profile_update(db_name, uid, passwd, partner_id, post, context=None):
     return _mobile_partner_dispatch(db_name, 'profile_update', partner_id, post, context)
@@ -103,6 +106,7 @@ def exp_logout(db_name, uid, passwd, userid, context=None):
 
 def dispatch(method, params):
     if method in ['signup',
+                  'mobile_login',
                   'facebook_login',
                   'products',
                   'profile',

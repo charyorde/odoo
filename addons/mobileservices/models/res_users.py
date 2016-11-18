@@ -2,12 +2,14 @@ import logging
 import json
 import time
 import random
+import base64
 
 import openerp
 from openerp import models, fields, api
 from openerp.addons.auth_signup.res_users import SignupError
 from openerp import SUPERUSER_ID
 from openerp.http import request
+from openerp.addons.mobileservices.queue import produce
 
 from hashids import Hashids
 
@@ -19,6 +21,37 @@ class res_users(models.Model):
     _inherit = 'res.users'
 
     userhash = fields.Char(help="A unique hash per user")
+    gcm_token = fields.Char(string="Android device token")
+    apn_token = fields.Char(string="iOS device token")
+    session_token = fields.Char(help="Can be used as jsessionid or session_id")
+
+    def mobile_login(self, cr, uid, post, context=None):
+        db, login, password = post.get('db'), post.get('login'), post.get('password')
+        user_id = self._login(db, login, password)
+        if user_id:
+            # Get mobile token
+            u = self.browse(cr, uid, [user_id])
+            payload = ":".join([login, str(time.time()), str(user_id)])
+            session_token = base64.b64encode(payload)
+            self.pool['res.users'].write(cr, uid, [user_id], {'session_token': session_token}, context=context)
+            message = {'session_token': session_token, 'email': login, 'uid': user_id}
+            params = {
+                'exchange': 'users',
+                'routing_key': 'socket',
+                'type': 'direct',
+            }
+            produce(message, **params)
+            values = {
+                'uid': user_id,
+                'gcm_token': u.gcm_token,
+                'apn_token': u.apn_token,
+                'session_token': session_token
+            }
+            return values
+        return user_id
+
+    def user_update(self):
+        pass
 
     def mobile_signup(self, cr, uid, post, context=None):
         pool = self.pool
@@ -27,17 +60,25 @@ class res_users(models.Model):
             'signup_enabled': icp.get_param(cr, SUPERUSER_ID, 'auth_signup.allow_uninvited') == 'True',
             'reset_password_enabled': icp.get_param(cr, SUPERUSER_ID, 'auth_signup.reset_password') == 'True',
         }
+        username = post.get('username')
+        company_name = post.get('company_name') or 'Greenwood'
+        if company_name:
+            company_ids = pool['res.company'].search(cr, SUPERUSER_ID, [('name', '=', company_name)], context=context)
+            company_id = company_ids[0]
+
         values = {
             'login': post.get('email'),
             'name': post.get('name'),
             'password': post.get('password'),
             'confirm_password': post.get('confirmpass'),
             'token': None,
+            'company_id': company_id,
+            'userhash': username
         }
         values.update(config)
         db, login, password = pool['res.users'].signup(cr, SUPERUSER_ID, values, None)
         user_id = self.search(cr, SUPERUSER_ID, [('login', '=', values['login'])], context=context)
-        if user_id:
+        if user_id and not username:
             userhash = self._generate_userhash()
             pool['res.users'].write(cr, SUPERUSER_ID, user_id, {'userhash': userhash}, context=context)
         cr.commit()
@@ -57,19 +98,19 @@ class res_users(models.Model):
         }
         return self.pool['res.users'].write(cr, SUPERUSER_ID, [user_id], values, context=context)
 
-    def change_username(self, cr, uid, username, context=None):
+    def change_username(self, cr, uid, user_id, username, context=None):
         try:
             self._validate_userhash(cr, uid, username, context=context)
-            validated = True
+            # write since it doesn't exist
+            self.write(cr, uid, [user_id], {'userhash': username}, context=context)
+            validated = {'result': True, 'message': 'OK'}
         except AssertionError as e:
-            validated = False
+            validated = {'result': False, 'message': e.message}
         return validated
 
     def _validate_userhash(self, cr, uid, value, context=None):
-        userid = self.search(self, cr, uid, ['userhash', '=', value], context=context)
-        #user = self.browse(cr, uid, [userid])
-        #assert user.exists(), 'Username already exists'
-        assert userid, 'Username already exists'
+        userid = self.search(cr, uid, [('userhash', '=', value)], context=context)
+        assert len(userid) < 1, 'Username already exists'
 
     def mobile_reset_password(self, uid):
         # Should we just use the web reset_password?

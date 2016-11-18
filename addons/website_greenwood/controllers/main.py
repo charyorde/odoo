@@ -912,22 +912,30 @@ def consume():
         connection = Connection(settings.get('amqpurl'))
         exchange = Exchange('socketio_forwarder', type='direct', durable=True)
         queue = Queue('', exchange, routing_key='forwarder')
+        registry = openerp.registry(openerp.tools.config['db_name'])
 
         def process_bet(body, message):
             _logger.info("RECEIVED MESSAGE: %r" % (body, ))
-            print("RECEIVED MESSAGE: %r" % (body, ))
+            values = {
+                'livebid_id': body.get('livebid_id'),
+                'product_id': body.get('product_id'),
+                'partner_id': body.get('partner_id'),
+                #'livebid_identity': body['livebid_identity']
+            }
+            #registry['cheape.bet'].livebet(registry.cursor(), SUPERUSER_ID, values)
             message.ack()
 
-#consumer = Consumer(connection.channel(), queues=queue, accept=['json', 'pickle'], callbacks=[process_bet])
-        consumer = Consumer(connection.channel(), queues=queue, callbacks=[process_bet])
+        consumer = Consumer(connection.channel(), queues=queue, accept=['json', 'pickle'], callbacks=[process_bet])
+        #consumer = Consumer(connection.channel(), queues=queue, callbacks=[process_bet])
 
         with connection as conn:
             with consumer:
                 conn.drain_events()
+
 if openerp.evented:
     # gevent mode
     import gevent
-    gevent.spawn(consume) # use start() instead so that it runs on the main thread
+    #gevent.spawn(consume) # use start() instead so that it runs on the main thread
     #gevent.spawn(publish)
     #gevent.spawn(bet)
 

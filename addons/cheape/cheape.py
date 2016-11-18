@@ -9,7 +9,7 @@ from gevent import Greenlet
 from gevent import getcurrent
 #from gevent import select
 from gevent.local import local
-from threading import current_thread
+#from threading import current_thread
 
 import openerp
 from openerp import SUPERUSER_ID
@@ -49,18 +49,22 @@ class BidTask(Greenlet):
                 else:
                     conn.poll()
                     while conn.notifies:
-                        _logger.info("LIVEBID UPDATE RECEIVED: %r" % simplejson.loads(conn.notifies.pop().payload))
+                        #_logger.info("LIVEBID UPDATE RECEIVED: %r" % simplejson.loads(conn.notifies.pop().payload))
                         data = simplejson.loads(conn.notifies.pop().payload)
                         if data.get('name') == self.bid.get('name'):
+                            _logger.info("LIVEBID UPDATE RECEIVED: %r" % data)
+                            if data.get('power_switch') and data.get('power_switch') == 'stop':
+                                gevent.kill(self)
                             self.bid = data
+                break
 
     def task(self, current_livebid):
         _logger.info("BidTask.task listen livebet on db postgres")
-        self._update_listener()
         t = local()
         t = self.bid.get('countdown')
         countdown_range = ['00:00:10', '00:00:09', '00:00:08', '00:00:07', '00:00:06', '00:00:05', '00:00:04', '00:00:03', '00:00:02', '00:00:01', '00:00:00']
         with openerp.sql_db.db_connect('postgres').cursor() as cr:
+            self._update_listener()
             # Retrieve the connection
             conn = cr._cnx
             cr.execute("listen livebet")
@@ -70,7 +74,10 @@ class BidTask(Greenlet):
                 mins, secs = divmod(t, 60)
                 hours, mins = divmod(mins, 60)
                 timeformat = '{:02.0f}:{:02.0f}:{:02.0f}'.format(hours, mins, secs)
+
                 _logger.info("Running %r" % [self.bid, id(getcurrent()), timeformat])
+                self.publish({'livebid_id': 5, 'countdown': timeformat})
+
                 res = select.select([], [], [], 1)
                 if timeformat in countdown_range and res != ([], [], []):
                     # act on notifications received
@@ -131,36 +138,34 @@ class BidTask(Greenlet):
         self.task(id(getcurrent()))
 
 def consume():
-    #while True:
-    exchange = Exchange('socketio_forwarder', type='direct', durable=True)
-    queue = Queue('', exchange, routing_key='forwarder')
+    while True:
+        exchange = Exchange('socketio_forwarder', type='direct', durable=True)
+        queue = Queue('', exchange, routing_key='forwarder')
+        registry = openerp.registry(openerp.tools.config['db_name'])
 
-    def process_bet(body, message):
-        _logger.info("RECEIVED MESSAGE: %r" % (body, ))
-        print("RECEIVED MESSAGE: %r" % (body, ))
-        #data = ast.literal_eval(body)
-        data = body
-        # write bet to db
-        d = data.get('d')
-        values = {
-            'livebid_id': data.get('livebid_id'),
-            'product_id': data.get('product_id'),
-            'partner_id': data.get('partner_id'),
-            #'livebid_identity': body['livebid_identity']
-        }
-        registry = openerp.registry(d)
-        #registry['cheape.bet'].livebet(registry.cursor(), SUPERUSER_ID, values)
-        #with registry.cursor() as cr:
-            #registry['cheape.bet'].create(cr, SUPERUSER_ID, values)
-        message.ack()
+        def process_bet(body, message):
+            _logger.info("RECEIVED MESSAGE: %r" % (body, ))
+            #data = ast.literal_eval(body)
+            data = body
+            # write bet to db
+            d = data.get('d')
+            values = {
+                'livebid_id': data.get('livebid_id'),
+                'product_id': data.get('product_id'),
+                'partner_id': data.get('partner_id'),
+                #'livebid_identity': body['livebid_identity']
+            }
+            #registry['cheape.bet'].livebet(registry.cursor(), SUPERUSER_ID, values)
+            #with registry.cursor() as cr:
+                #registry['cheape.bet'].create(cr, SUPERUSER_ID, values)
+            message.ack()
 
-    #consumer = Consumer(channel=connection.channel(), queues=queue, accept=['json', 'pickle'], callbacks=[process_bet])
-    consumer = Consumer(connection, queues=queue, callbacks=[process_bet])
-    consumer.consume(no_ack=False);
+        consumer = Consumer(channel=connection.channel(), queues=queue, accept=['json', 'pickle'], callbacks=[process_bet])
+        #consumer = Consumer(connection, queues=queue, callbacks=[process_bet])
 
-    with connection as conn:
-        with consumer:
-            conn.drain_events()
+        with connection as conn:
+            with consumer:
+                conn.drain_events()
 
 class C(ConsumerMixin):
 
@@ -229,27 +234,37 @@ class LiveBid(object):
                 else:
                     conn.poll()
                     while conn.notifies:
-                        _logger.info("DB NOTIFICATION RECEIVED: %r" % simplejson.loads(conn.notifies.pop().payload))
+                        #_logger.info("DB NOTIFICATION RECEIVED: %r" % simplejson.loads(conn.notifies.pop().payload))
                         try:
                             livebid_record = simplejson.loads(conn.notifies.pop().payload)
-                            g = [gevent.spawn(BidTask(livebid_record))]
+                            #g = [gevent.spawn(BidTask(livebid_record))]
+                            g = gevent.spawn(BidTask(livebid_record))
                             _logger.info("Today's livebid %r" % g)
-                            if g:
-                                gevent.joinall(g)
+                            #gevent.joinall(g) if g else None
+                            g.start().join()
                         except Exception as e:
                             _logger.info("Failed to load today's auction %r" % e)
+
 
 db_name = openerp.tools.config['db_name']
 if openerp.evented:
     gevent.spawn(LiveBid().listen(db_name))
-    #gevent.spawn(consume) # use start() instead so that it runs on the main thread
+    gevent.spawn(consume) # use start() instead so that it runs on the main thread
     #gevent.spawn(consume_socket)
     #gevent.spawn(C(connection).run())
     #gevent.spawn(BidTask.keepalive())
 
 class LiveBidManager(object):
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.livebid = []
+        self.machina = kwargs.get('machina')
+        if self.machina:
+            self.imitate(self.machina)
+
+    def imitate(self, data):
+        registry = openerp.registry(db_name)
+        livebid = registry.get('cheape.livebid')
+        livebid.machina_bid(registry.cr, SUPERUSER_ID, data)
 
     def add(self, bidtask):
         self.livebid.append(bidtask)
@@ -258,7 +273,7 @@ class LiveBidManager(object):
         # for n livebid joinall
         gevent.joinall(self.livebid)
 
-#bid_manager = LiveBidManager()
+bid_manager = LiveBidManager()
 
 
 class Controller(openerp.http.Controller):
@@ -277,5 +292,6 @@ class Controller(openerp.http.Controller):
         pass
 
     @openerp.http.route('/cheape/poll', type="json", auth="public")
-    def poll(self):
-        pass
+    def poll(self, data):
+        # LiveBidManager(machina=machina)
+        bid_manager.imitate(data)

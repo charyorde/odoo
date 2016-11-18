@@ -63,6 +63,7 @@
       <!--<field name="field_parent">child_ids</field>-->
       <field name="arch" type="xml">
         <tree string="Rewards">
+          <field name="label"/>
           <field name="name"/>
           <field name="action"/>
         </tree>
