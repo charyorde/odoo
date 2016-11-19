@@ -75,7 +75,8 @@ class res_partner(models.Model):
             'score_interpretation': partner.score_interpretation,
             'gcm_token': user.gcm_token,
             'apn_token': user.apn_token,
-            'username': user.userhash
+            'username': user.userhash,
+            'bidscount': partner.bidscount
         }
 
         return values

@@ -75,7 +75,8 @@ class cheape_account(models.Model):
                 values.append({
                     'product_id': l.product_id.id,
                     'name': l.product_id.name,
-                    'bid_total': l.product_id.bid_total
+                    'bid_total': l.product_id.bid_total,
+                    'claimed': l.claimed
                 })
         return values
 
@@ -191,6 +192,7 @@ class livebid(models.Model):
     bidpacks_qty = fields.Integer(string="Bidpacks per bid", default=1, help="The quantity of bidpacks per bid required on this livebid")
     autobids = fields.One2many('cheape.autobid', 'livebid_id', help="A list of autobids on this livebid")
     totalbids = fields.Integer(string="Total bids", help="The total bids placed since live bid begun")
+    claimed = fields.Boolean(help="A livebid winner either claims it or not", default=False)
 
     _sql_constraints = [
         ('product_id_uniq', 'UNIQUE(product_id)', 'A livebid product_id must be unique!'),
@@ -247,7 +249,7 @@ class livebid(models.Model):
         livebid_name_ids = livebid_name_obj.search(cr, uid, [])
         _logger.info("livebid_name_ids %r" % livebid_name_ids)
         livebid_names = livebid_name_obj.browse(cr, uid, livebid_name_ids, context=context)
-        names = [name.name for name in livebid_names]
+        names = [name.aname for name in livebid_names]
         _logger.info("livebid_names %r" % names)
 
         with openerp.sql_db.db_connect('postgres').cursor() as cr2:
@@ -274,7 +276,7 @@ class livebid(models.Model):
                     autobids.append(autobid.livebid_id)
 
             values = {
-                'name': record.name,
+                'name': record.aname,
                 'status': record.status,
                 'bidpacks_qty': record.bidpacks_qty,
                 'product_id': record.product_id.id,
@@ -290,7 +292,7 @@ class livebid(models.Model):
 
             with openerp.sql_db.db_connect('postgres').cursor() as cr2:
                 cr2.execute("notify cheape_livebid, %s", (simplejson.dumps(values),))
-        elif row.name and row.power_switch == 'on':
+        elif row.aname and row.power_switch == 'on':
             # notify BidTask of livebid update
             record = self.browse(cr, uid, ids)
             autobids = []
@@ -299,7 +301,7 @@ class livebid(models.Model):
                     autobids.append(autobid.livebid_id)
 
             values = {
-                'name': record.name,
+                'name': record.lname,
                 'status': record.status,
                 'bidpacks_qty': record.bidpacks_qty,
                 'product_id': record.product_id.id,
@@ -394,8 +396,10 @@ class rewards(models.Model):
         return allrewards.filtered(lambda r: r.name not in rewards)
 
     def _get_reward(self, cr, uid, action, context=None):
-        rewards = self.browse(cr, uid, [], context=context)
-        return rewards.filtered(lambda r: r.action == action)
+        ids = self.search(cr, uid, [('action', '=', action)], context=context)
+        rewards = self.browse(cr, uid, ids, context=context)
+        #return rewards.filtered(lambda r: r.action == action)
+        return rewards
 
 
 class reward(models.Model):

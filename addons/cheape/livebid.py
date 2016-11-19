@@ -51,7 +51,7 @@ class BidTask(Greenlet):
                     while conn.notifies:
                         #_logger.info("LIVEBID UPDATE RECEIVED: %r" % simplejson.loads(conn.notifies.pop().payload))
                         data = simplejson.loads(conn.notifies.pop().payload)
-                        if data.get('name') == self.bid.get('name'):
+                        if data.get('auction_name') == self.bid.get('auction_name'):
                             _logger.info("LIVEBID UPDATE RECEIVED: %r" % data)
                             if data.get('power_switch') and data.get('power_switch') == 'stop':
                                 gevent.kill(self)

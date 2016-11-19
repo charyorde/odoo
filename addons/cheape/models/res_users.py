@@ -71,7 +71,7 @@ class res_users(models.Model):
             pool['cheape.reward'].create(cr, SUPERUSER_ID, params, context=context)
             params['qty'] = int(reward.label)
             pool['res.partner'].topup_bidpacks(cr, SUPERUSER_ID, params, context=context)
-        return [db, login, password, auth_token] if all([k for k in [db, login, password]]) else None
+        return [db, login, password] if all([k for k in [db, login, password]]) else None
 
     def account_update(self, cr, uid, user_id, post, context=None):
         ret = None
