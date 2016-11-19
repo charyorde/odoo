@@ -187,7 +187,6 @@ class livebid(models.Model):
     amount_totalbids = fields.Float(string='Amount total bids', compute='_compute_amount_totalbids', store=True, help='Sum of all total bids placed on this livebid')
     #amount_totalbids = fields.Float(string="Total bids value", default=float(0.0), help="Total bids on a livebid")
     wonby = fields.Many2one('res.partner', string="Livebid winner")
-    active = fields.Boolean(help="An active livebid is one with a countdown")
     raiser = fields.Float(default=float(0.01), help="The value in which bets on this livebid increments by")
     bidpacks_qty = fields.Integer(string="Bidpacks per bid", default=1, help="The quantity of bidpacks per bid required on this livebid")
     autobids = fields.One2many('cheape.autobid', 'livebid_id', help="A list of autobids on this livebid")
