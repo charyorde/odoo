@@ -78,6 +78,7 @@ class res_product(models.Model):
                 product_list.append({'id': product.id,
                                      'name': product.name,
                                      'price': product.list_price,
+                                     'description': product.description,
                                      'product_imageurl': '{0}/web/binary/image?model=product.template&field=image_medium&id={1}'.format(config.settings()['mobile_virtual_host'], product.id),
                                      'product_imageurl_big': '{0}/web/binary/image?model=product.template&field=image&id={1}'.format(config.settings()['mobile_virtual_host'], product.id),
                                      'sellers': sellers,
