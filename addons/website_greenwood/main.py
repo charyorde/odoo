@@ -55,12 +55,12 @@ class Config():
                        swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin',
                        gcm_sender_id='',
                        gcm_apikey='',
-                       #amqpurl='amqp://guest:guest@localhost:5672/',
+                       amqpurl='amqp://guest:guest@localhost:5672/',
                        #amqpurl='amqp://test:Wordpass15@192.168.10.29:5672/',
-                       amqpurl='amqp://yookore:Wordpass15@192.168.121.154:5672/',
+                       #amqpurl='amqp://yookore:Wordpass15@192.168.121.154:5672/',
                        #sio_server_host='0.0.0.0',
                        sio_server_host='sios.apps.yookosapps.com',
-                       sio_server_port=5000,
+                       sio_server_port=80,
                        )
         return env
 

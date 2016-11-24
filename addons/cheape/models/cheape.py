@@ -9,10 +9,14 @@ import time
 import openerp
 from openerp import models, fields, api
 from openerp import SUPERUSER_ID
+#from openerp.addons.cheape.livebid import launcher
+from openerp.addons.mobileservices.queue import produce
 
 from hashids import Hashids
 
 _logger = logging.getLogger(__name__)
+
+DEFAULT_BIDS_SPENT = 1
 
 def json_dump(v):
     return simplejson.dumps(v, separators=(',', ':'))
@@ -131,15 +135,33 @@ class bet(models.Model):
     """ A cheape bet """
     _name = 'cheape.bet'
 
-    livebid_id = fields.Many2one('cheape.livebid', string="The livebid", readonly=True, ondelete='cascade')
-    product_id = fields.Many2one('product.template', string="Product", readonly=True)
-    partner_id = fields.Many2one('res.partner', string="Customer", readonly=True)
+    livebid_id = fields.Many2one('cheape.livebid', string="The livebid", readonly=True, ondelete='cascade', index=True)
+    product_id = fields.Many2one('product.template', string="Product", readonly=True, index=True)
+    partner_id = fields.Many2one('res.partner', string="Customer", readonly=True, index=True)
+    bids_spent = fields.Integer(help="A count of bids spent by this user", default=0)
+    bids_spent_value = fields.Float(compute='_compute_bids_spent_value', store=True, help="The sum of total bids placed by user on a specific livebid")
+    buy_it_now_price = fields.Float(compute='_compute_buy_it_now_price', store=True)
 
-    #def bet(self, cr, uid, values):
-        #record = self.create(cr, uid, values)
+    def bet(self, cr, uid, data, context=None):
+        """ Non-livebid bet """
+        product_obj = self.pool['product.template']
+        livebid = self.pool['cheape_livebid'].browse(cr, uid, [data.get('livebid_id')])
+        product = livebid.product_id
+        partner = data.get('partner_id')
+        bid_ids = self.search(cr, uid, [('partner_id', '=', data['partner_id'])])
+        userbet = self.browse(cr, uid, bid_ids, context=None)
+        values = data.copy()
+        if bid_ids:
+            # Update
+            val = [userbet.bids_spent, DEFAULT_BIDS_SPENT]
+            values['bids_spent'] = math.sum(val)
+            record = self.write(cr, uid, [partner], values)
+        else:
+            values['bids_spent'] = DEFAULT_BIDS_SPENT
+            record = self.create(cr, uid, values)
         # Update product_template. with new bidprice
-        # reset livebid.countdown and publish message back to client
-        #return record
+        product_obj.write(cr, uid, values['product_id'], {'bid_total': math.fsum([product.bid_total, livebid.raiser])})
+        return record
 
     def livebet(self, cr, uid, values, context=None):
         partner_obj = self.pool['res.partner']
@@ -167,6 +189,27 @@ class bet(models.Model):
         # return payload [bidpacks_left, bid_total]
         return record
 
+    def _compute_bet(self, cr, uid, partner_id, context=None):
+        """ Compute total bids on a livebid per user """
+        # A list of all bets by this user on this livebid
+        # math.fsum(values)
+        pass
+
+    @api.multi
+    @api.depends('bids_spent_value', 'livebid_id')
+    def _compute_buy_it_now_price(self):
+        # Retail price - bids_spent_value
+        # self = self.with_context(self.env['res.users'].context_get())
+        livebid = self.env['cheape.livebid'].browse([self.livebid_id])
+        retail_price = livebid.product_id.price
+        return reduce(lambda x, y: x-y, [retail_price, self.bids_spent_value])
+
+    @api.multi
+    @api.depends('bids_spent', 'livebid_id')
+    def _compute_bids_spent_value(self):
+        livebid = self.env['cheape.livebid'].browse([self.livebid_id])
+        return self.bids_spent * livebid.bid_cost
+
 
 class livebid(models.Model):
     """ A live auction """
@@ -175,7 +218,7 @@ class livebid(models.Model):
     name = fields.Char(help="A unique livebid name")
     product_id = fields.Many2one('product.template', domain=[('company_id.name', '=', 'Cheape')], string="Product", required=True)
     power_switch = fields.Selection(
-        [('on', 'On'),('off', 'Off')], string="Power Switch", help="Switch the state of a livebid")
+        [('on', 'On'),('off', 'Off'), ('stop', 'Stop')], string="Power Switch", help="Switch the state of a livebid")
     islive = fields.Boolean(string="IsLive", index=True, default=False, help="Power on/off this livebid")
     # Is the livebid open or closed
     status = fields.Selection([('open', 'Open'),('closed', 'Closed'),], string="Status", default="closed",
@@ -193,6 +236,7 @@ class livebid(models.Model):
     autobids = fields.One2many('cheape.autobid', 'livebid_id', help="A list of autobids on this livebid")
     totalbids = fields.Integer(string="Total bids", help="The total bids placed since live bid begun")
     claimed = fields.Boolean(help="A livebid winner either claims it or not", default=False)
+    bid_cost = fields.Float(default=float(0.50), help="Cost per bid")
 
     _sql_constraints = [
         ('product_id_uniq', 'UNIQUE(product_id)', 'A livebid product_id must be unique!'),
@@ -249,7 +293,7 @@ class livebid(models.Model):
         livebid_name_ids = livebid_name_obj.search(cr, uid, [])
         _logger.info("livebid_name_ids %r" % livebid_name_ids)
         livebid_names = livebid_name_obj.browse(cr, uid, livebid_name_ids, context=context)
-        names = [name.aname for name in livebid_names]
+        names = [name.name for name in livebid_names]
         _logger.info("livebid_names %r" % names)
 
         with openerp.sql_db.db_connect('postgres').cursor() as cr2:
@@ -276,7 +320,8 @@ class livebid(models.Model):
                     autobids.append(autobid.livebid_id)
 
             values = {
-                'name': record.aname,
+                'livebid_id': record.id,
+                'name': record.name,
                 'status': record.status,
                 'bidpacks_qty': record.bidpacks_qty,
                 'product_id': record.product_id.id,
@@ -288,11 +333,18 @@ class livebid(models.Model):
                 'heartbeat': record.heartbeat,
                 'wonby': record.wonby.id,
                 'power_switch': record.power_switch,
+                'countdown': record.countdown
             }
 
-            with openerp.sql_db.db_connect('postgres').cursor() as cr2:
-                cr2.execute("notify cheape_livebid, %s", (simplejson.dumps(values),))
-        elif row.aname and row.power_switch == 'on':
+            #launcher.start(values)
+            qparams = {
+                'exchange': 'livebid',
+                'routing_key': 'new',
+                'type': 'direct',
+            }
+            produce(values, **qparams)
+
+        elif row.name and row.power_switch == 'on':
             # notify BidTask of livebid update
             record = self.browse(cr, uid, ids)
             autobids = []
@@ -301,7 +353,8 @@ class livebid(models.Model):
                     autobids.append(autobid.livebid_id)
 
             values = {
-                'name': record.lname,
+                'livebid_id': record.id,
+                'name': record.name,
                 'status': record.status,
                 'bidpacks_qty': record.bidpacks_qty,
                 'product_id': record.product_id.id,
@@ -313,19 +366,68 @@ class livebid(models.Model):
                 'heartbeat': record.heartbeat,
                 'wonby': record.wonby.id,
                 'power_switch': record.power_switch,
+                'countdown': record.countdown,
+                'binding_key': 'new'
             }
             _logger.info("VALUES %r" % values)
-            with openerp.sql_db.db_connect('postgres').cursor() as cr2:
-                cr2.execute("notify livebid_update, %s", (simplejson.dumps(values),))
 
+            #launcher.start(values)
+            qparams = {
+                'exchange': 'livebid',
+                'routing_key': 'new',
+                'type': 'direct',
+            }
+            produce(values, **qparams)
+
+        elif row.name and row.power_switch in ('stop', 'off'):
+            # notify BidTask of livebid update
+            record = self.browse(cr, uid, ids)
+
+            values = {
+                'livebid_id': record.id,
+                'name': record.name,
+                'status': record.status,
+                'bidpacks_qty': record.bidpacks_qty,
+                'product_id': record.product_id.id,
+                'start_time': record.start_time,
+                'raiser': record.raiser,
+                'end_time': record.end_time,
+                'islive': record.islive,
+                'heartbeat': record.heartbeat,
+                'wonby': record.wonby.id,
+                'power_switch': record.power_switch,
+                'countdown': record.countdown,
+                'binding_key': 'update'
+            }
+            _logger.info("VALUES %r" % values)
+
+            #launcher.update(values)
+            qparams = {
+                'exchange': 'livebid',
+                'routing_key': 'update',
+                'type': 'direct',
+            }
+            produce(values, **qparams)
         return result
+
+    def user_can_buy(self, cr, uid):
+        """ buy it now price = retail price - auction price """
+        # Validate eligibility
+        bids_spent_value = 0
+        if bids_spent_value < buy_it_now_price:
+            return False
+        else:
+            # proceed
+            pass
 
     def _get_todays_auction(self, cr, uid, context=None):
         livebid_ids = self.search(cr, uid, [('islive', '=', True)], context=context)
         return self.browse(cr, uid, livebid_ids)
 
     def off(self, cr, uid, ids):
-        self.write(cr, uid, ids, {'islive': False})
+        """ Set power_switch to off, remove livebid from cheape_livebid_name """
+        self.write(cr, uid, ids, {'power_switch': 'off'})
+        self.pool['cheape_livebid_name'].unlink_record(cr, SUPERUSER_ID, ids)
 
     def _livebid_by_product(cr, uid, product_id):
         record = self.browse(cr, uid, [product_id])
@@ -368,6 +470,10 @@ class livebid_name(models.Model):
         hashids = Hashids(min_length=5, salt=salt)
         return hashids.encode(int(time.time()), random.randint(1, int(time.time())))
 
+    def unlink_record(self, cr, uid, ids):
+        record = self.browse(cr, uid, ids)
+        if ids:
+            record.unlink()
 
 class watchlist(models.Model):
     _name = 'cheape.watchlist'
