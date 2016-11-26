@@ -50,12 +50,12 @@ class Namespace(BaseNamespace):
             'session_token': session_token
         })
 
-sio = SocketIO(
-    settings.get('sio_server_host'),
-    settings.get('sio_server_port'), Namespace,
-    params={'sessionid': session_token},
-    cookies={'JSESSIONID': session_token[0]}
-)
+#sio = SocketIO(
+    #settings.get('sio_server_host'),
+    #settings.get('sio_server_port'), Namespace,
+    #params={'sessionid': session_token},
+    #cookies={'JSESSIONID': session_token[0]}
+#)
 
 class BidTask(Greenlet):
     def __init__(self, bid):
@@ -146,17 +146,16 @@ class BidTask(Greenlet):
 
 
     def new_bid(self, message):
-        sio.emit('')
+        launcher.sio.emit('')
 
     def countdown(self, message):
-        sio.emit('countdown', message)
-        #sio.wait(seconds=1)
+        launcher.sio.emit('countdown', message)
 
     def autobid(self):
-        sio.emit('livebet', {})
+        launcher.sio.emit('livebet', {})
 
     def stop(self, data):
-        #sio.emit('stop', data)
+        #launcher.sio.emit('stop', data)
         # remove greenlet name from livebid_name
         registry = openerp.modules.registry.RegistryManager.get(db_name)
         with registry.cursor() as cr:
@@ -242,7 +241,8 @@ class C(ConsumerMixin):
     def on_message(self, body, message):
         print("RECEIVED BODY: %r" % (body, ))
         print("RECEIVED MESSAGE: %r" % (message, ))
-        registry = openerp.modules.registry.Registry(db_name)
+        #registry = openerp.modules.registry.Registry(db_name)
+        registry = openerp.modules.registry.RegistryManager.get(db_name)
         data = body
         if data.get('binding_key') == 'livebid':
             # write bet to db
@@ -255,12 +255,15 @@ class C(ConsumerMixin):
             registry['cheape.bet'].livebet(registry.cursor(), SUPERUSER_ID, values)
             #try:
                 #with registry.cursor() as cr:
-                    #registry['cheape.bet'].create(cr, SUPERUSER_ID, values)
+                    #registry.get('cheape.bet').create(cr, SUPERUSER_ID, values)
             #except:
             #    pass
         if data.get('binding_key') == 'cleanup':
-            livebid_id = data.get('livebid_id')
-            registry['cheape.livebid'].off(registry.cursor(), SUPERUSER_ID, livebid_id)
+            with registry.cursor() as cr:
+                livebid_id = data.get('livebid_id')
+                #registry.get('cheape.livebid').off(registry.cursor(), SUPERUSER_ID, livebid_id)
+                cr.execute("DELETE FROM cheape_livebid_name WHERE livebid_id = %s", (livebid_id,))
+                cr.commit()
         message.ack()
 
 # Autobid
@@ -268,6 +271,14 @@ class C(ConsumerMixin):
 # if autobid.livebid.status == open, place a bet
 from collections import namedtuple
 class LiveBid(object):
+    def __init__(self):
+        self.sio = SocketIO(
+            settings.get('sio_server_host'),
+            settings.get('sio_server_port'), Namespace,
+            params={'sessionid': session_token},
+            cookies={'JSESSIONID': session_token[0]}
+        )
+
     def start(self, data):
         if openerp.evented:
             gevent.spawn(BidTask(data))

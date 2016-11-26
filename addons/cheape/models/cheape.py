@@ -308,106 +308,113 @@ class livebid(models.Model):
         livebid_name_obj = self.pool['cheape.livebid.name']
         result = super(livebid, self).write(cr, uid, ids, data, context=context) # return Boolean
         row = self.browse(cr, uid, ids)
+        name_row_ids = livebid_name_obj.search(cr, uid, [('livebid_id', 'in', ids)])
+        name_row = livebid_name_obj.browse(cr, uid, name_row_ids)
         # if no livebid_name & islive is True,
         # create a new thread, update livebid with a livebid_name
-        if not row.name and row.power_switch == 'on':
-            livebid_name = livebid_name_obj._generate_livebid_name()
-            livebid_obj.write(cr, uid, ids, {'name': livebid_name})
-            record = self.browse(cr, uid, ids)
-            autobids = []
-            if record.autobids:
-                for autobid in autobids:
-                    autobids.append(autobid.livebid_id)
+        if not name_row:
+            if 'power_switch' in data:
+                if data['power_switch'] == 'on':
+                    _logger.info("Creating new livebid %r" % (ids))
+                    #livebid_name = livebid_name_obj._generate_livebid_name()
+                    #livebid_obj.write(cr, uid, name_row_ids, {'name': livebid_name})
+                    livebid_name_obj.create(cr, uid, {'name': row.name, 'livebid_id': ids[0]})
+                    record = self.browse(cr, uid, ids)
+                    autobids = []
+                    if record.autobids:
+                        for autobid in autobids:
+                            autobids.append(autobid.livebid_id)
 
-            values = {
-                'livebid_id': record.id,
-                'name': record.name,
-                'status': record.status,
-                'bidpacks_qty': record.bidpacks_qty,
-                'product_id': record.product_id.id,
-                'start_time': record.start_time,
-                'raiser': record.raiser,
-                'end_time': record.end_time,
-                'autobids': autobids,
-                'islive': record.islive,
-                'heartbeat': record.heartbeat,
-                'wonby': record.wonby.id,
-                'power_switch': record.power_switch,
-                'countdown': record.countdown
-            }
+                    values = {
+                        'livebid_id': record.id,
+                        'name': record.name,
+                        'status': record.status,
+                        'bidpacks_qty': record.bidpacks_qty,
+                        'product_id': record.product_id.id,
+                        'start_time': record.start_time,
+                        'raiser': record.raiser,
+                        'end_time': record.end_time,
+                        'autobids': autobids,
+                        'islive': record.islive,
+                        'heartbeat': record.heartbeat,
+                        'wonby': record.wonby.id,
+                        'power_switch': record.power_switch,
+                        'countdown': record.countdown
+                    }
 
-            #launcher.start(values)
-            qparams = {
-                'exchange': 'livebid',
-                'routing_key': 'new',
-                'type': 'direct',
-            }
-            produce(values, **qparams)
+                    #launcher.start(values)
+                    qparams = {
+                        'exchange': 'livebid',
+                        'routing_key': 'new',
+                        'type': 'direct',
+                    }
+                    produce(values, **qparams)
 
-        elif row.name and row.power_switch == 'on':
-            # notify BidTask of livebid update
-            record = self.browse(cr, uid, ids)
-            autobids = []
-            if record.autobids:
-                for autobid in autobids:
-                    autobids.append(autobid.livebid_id)
+        #elif name_row.name and row.power_switch == 'on':
+            #record = self.browse(cr, uid, ids)
+            #autobids = []
+            #if record.autobids:
+                #for autobid in autobids:
+                    #autobids.append(autobid.livebid_id)
 
-            values = {
-                'livebid_id': record.id,
-                'name': record.name,
-                'status': record.status,
-                'bidpacks_qty': record.bidpacks_qty,
-                'product_id': record.product_id.id,
-                'start_time': record.start_time,
-                'raiser': record.raiser,
-                'end_time': record.end_time,
-                'autobids': autobids,
-                'islive': record.islive,
-                'heartbeat': record.heartbeat,
-                'wonby': record.wonby.id,
-                'power_switch': record.power_switch,
-                'countdown': record.countdown,
-                'binding_key': 'new'
-            }
-            _logger.info("VALUES %r" % values)
+            #values = {
+                #'livebid_id': record.id,
+                #'name': record.name,
+                #'status': record.status,
+                #'bidpacks_qty': record.bidpacks_qty,
+                #'product_id': record.product_id.id,
+                #'start_time': record.start_time,
+                #'raiser': record.raiser,
+                #'end_time': record.end_time,
+                #'autobids': autobids,
+                #'islive': record.islive,
+                #'heartbeat': record.heartbeat,
+                #'wonby': record.wonby.id,
+                #'power_switch': record.power_switch,
+                #'countdown': record.countdown,
+                #'binding_key': 'new'
+            #}
+            #_logger.info("VALUES %r" % values)
 
-            #launcher.start(values)
-            qparams = {
-                'exchange': 'livebid',
-                'routing_key': 'new',
-                'type': 'direct',
-            }
-            produce(values, **qparams)
+            #qparams = {
+                #'exchange': 'livebid',
+                #'routing_key': 'new',
+                #'type': 'direct',
+            #}
+            #produce(values, **qparams)
 
-        elif row.name and row.power_switch in ('stop', 'off'):
-            # notify BidTask of livebid update
-            record = self.browse(cr, uid, ids)
+        elif name_row and name_row.name:
+            if 'power_switch' in data:
+                if data['power_switch'] in ('stop', 'off'):
+                    _logger.info("Stopping livebid %r" % (ids))
+                    # notify BidTask of livebid update
+                    record = self.browse(cr, uid, ids)
 
-            values = {
-                'livebid_id': record.id,
-                'name': record.name,
-                'status': record.status,
-                'bidpacks_qty': record.bidpacks_qty,
-                'product_id': record.product_id.id,
-                'start_time': record.start_time,
-                'raiser': record.raiser,
-                'end_time': record.end_time,
-                'islive': record.islive,
-                'heartbeat': record.heartbeat,
-                'wonby': record.wonby.id,
-                'power_switch': record.power_switch,
-                'countdown': record.countdown,
-                'binding_key': 'update'
-            }
-            _logger.info("VALUES %r" % values)
+                    values = {
+                        'livebid_id': record.id,
+                        'name': record.name,
+                        'status': record.status,
+                        'bidpacks_qty': record.bidpacks_qty,
+                        'product_id': record.product_id.id,
+                        'start_time': record.start_time,
+                        'raiser': record.raiser,
+                        'end_time': record.end_time,
+                        'islive': record.islive,
+                        'heartbeat': record.heartbeat,
+                        'wonby': record.wonby.id,
+                        'power_switch': record.power_switch,
+                        'countdown': record.countdown,
+                        'binding_key': 'update'
+                    }
+                    _logger.info("VALUES %r" % values)
 
-            #launcher.update(values)
-            qparams = {
-                'exchange': 'livebid',
-                'routing_key': 'update',
-                'type': 'direct',
-            }
-            produce(values, **qparams)
+                    #launcher.update(values)
+                    qparams = {
+                        'exchange': 'livebid',
+                        'routing_key': 'update',
+                        'type': 'direct',
+                    }
+                    produce(values, **qparams)
         return result
 
     def user_can_buy(self, cr, uid):
@@ -426,10 +433,10 @@ class livebid(models.Model):
 
     def off(self, cr, uid, ids):
         """ Set power_switch to off, remove livebid from cheape_livebid_name """
-        self.write(cr, uid, ids, {'power_switch': 'off'})
+        #self.write(cr, uid, ids, {'power_switch': 'off'})
         self.pool['cheape_livebid_name'].unlink_record(cr, SUPERUSER_ID, ids)
 
-    def _livebid_by_product(cr, uid, product_id):
+    def _livebid_by_product(self, cr, uid, product_id):
         record = self.browse(cr, uid, [product_id])
         values = {
             'name': record.name,
