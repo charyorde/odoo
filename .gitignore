@@ -37,6 +37,7 @@ install/win32/meta.py
 *.zip
 *.sql
 *.dump
+*.bak
 
 # greenwood files
 certbot.log

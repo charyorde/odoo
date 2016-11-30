@@ -10,7 +10,8 @@ import openerp
 from openerp import models, fields, api
 from openerp import SUPERUSER_ID
 #from openerp.addons.cheape.livebid import launcher
-from openerp.addons.mobileservices.queue import produce
+from openerp.addons.mobileservices.queue import produce, dist_queue
+import openerp.addons.decimal_precision as dp
 
 from hashids import Hashids
 
@@ -52,6 +53,22 @@ def _hours_list():
             (_compute_hour_to_secs(24), '24:00'),
         ]
     return l
+
+def _publish_autobids(data):
+    qparams = {
+        'exchange': 'livebid',
+        'routing_key': 'autobids',
+        'type': 'direct',
+    }
+    produce(data, **qparams)
+
+def _publish_livebet(data):
+    qparams = {
+        'exchange': 'livebid',
+        'routing_key': 'livebet',
+        'type': 'direct',
+    }
+    produce(data, **qparams)
 
 
 class cheape_account(models.Model):
@@ -98,9 +115,11 @@ class cheape_account(models.Model):
     def reduce_bidpacks(self, cr, uid, partner_id, qty, context=None):
         """ Reduce user's bidpacks by x amount """
         cheape_account = self.browse(cr, uid, [partner_id], context=context)
-        bidscount = reduce(lambda x, y: x-y, [cheape_account.bidscount, qty])
-        self.write(cr, uid, [cheape_account.id], {'bidscount': bidscount})
-        return bidscount
+        bids = reduce(lambda x, y: x-y, [cheape_account.bidscount, qty])
+        # prevent negative value
+        bids = 0 if bids < 0 else bids
+        self.write(cr, uid, [cheape_account.id], {'bidscount': bids})
+        return bids
 
     #@api.depends('partner_id')
     def _my_watchlist(self, cr, uid, ids, context=None):
@@ -139,52 +158,98 @@ class bet(models.Model):
     product_id = fields.Many2one('product.template', string="Product", readonly=True, index=True)
     partner_id = fields.Many2one('res.partner', string="Customer", readonly=True, index=True)
     bids_spent = fields.Integer(help="A count of bids spent by this user", default=0)
-    bids_spent_value = fields.Float(compute='_compute_bids_spent_value', store=True, help="The sum of total bids placed by user on a specific livebid")
-    buy_it_now_price = fields.Float(compute='_compute_buy_it_now_price', store=True)
+    bids_spent_value = fields.Float(compute='_compute_bids_spent_value', digits_compute=dp.get_precision('Product Price'), store=True, help="The sum of total bids placed by user on a specific livebid")
+    buy_it_now_price = fields.Float(compute='_compute_buy_it_now_price', digits_compute=dp.get_precision('Product Price'), store=True)
 
     def bet(self, cr, uid, data, context=None):
         """ Non-livebid bet """
-        product_obj = self.pool['product.template']
-        livebid = self.pool['cheape_livebid'].browse(cr, uid, [data.get('livebid_id')])
+        pool = self.pool
+        product_obj = pool['product.template']
+        partner_obj = pool['res.partner']
+        livebid = pool['cheape.livebid'].browse(cr, uid, [data.get('livebid_id')])
         product = livebid.product_id
-        partner = data.get('partner_id')
-        bid_ids = self.search(cr, uid, [('partner_id', '=', data['partner_id'])])
+        partnerid = data.get('partner_id')
+        partner = partner_obj.browse(cr, uid, [partnerid])
+        bid_ids = self.search(cr, uid, [('partner_id', '=', data['partner_id']), ('livebid_id', '=', data['livebid_id'])])
         userbet = self.browse(cr, uid, bid_ids, context=None)
         values = data.copy()
+        if values['binding_key']:
+            del values['binding_key']
+
+        # Validate whether user has bids
+        if partner.bidscount < 1:
+            return False
+
         if bid_ids:
             # Update
             val = [userbet.bids_spent, DEFAULT_BIDS_SPENT]
-            values['bids_spent'] = math.sum(val)
-            record = self.write(cr, uid, [partner], values)
+            values['bids_spent'] = sum(val)
+            record = self.write(cr, uid, bid_ids, values)
         else:
             values['bids_spent'] = DEFAULT_BIDS_SPENT
-            record = self.create(cr, uid, values)
+            values['bids_spent_value'] = float(1.0)
+            #record = self.create(cr, uid, values)
+            record = super(bet, self).create(cr, uid, values, context=context)
         # Update product_template. with new bidprice
         product_obj.write(cr, uid, values['product_id'], {'bid_total': math.fsum([product.bid_total, livebid.raiser])})
-        return record
+        # Reduce user's bidpacks by livebid.bidpacks_qty
+        partner_obj.reduce_bidpacks(cr, uid, values['partner_id'], livebid.bidpacks_qty)
+        d = {
+            'livebid_id': values['livebid_id'],
+            'partner_id': values['partner_id'],
+            'username': partner.user_id.userhash,
+            'auction_price': product.bid_total,
+            'binding_key': 'livebet'
+        }
+        _publish_livebet(d)
+        return d or False
 
     def livebet(self, cr, uid, values, context=None):
-        partner_obj = self.pool['res.partner']
-        product_obj = self.pool['product.template']
-        livebid_obj = self.pool['cheape.livebid']
-        cheape_account_obj = self.pool['res.partner']
-        partner_id = values['partner_id']
-        product = product_obj.browse(cr, uid, values['product_id'])
-        livebid = self.pool['cheape.livebid'].browse(cr, uid, values['livebid_id'])
-        partner = partner_obj.browse(cr, uid, values['partner_id'])
+        pool = self.pool
+        partner_obj = pool['res.partner']
+        product_obj = pool['product.template']
+        livebid_obj = pool['cheape.livebid']
+        cheape_account_obj = pool['res.partner']
 
-        record = self.create(cr, uid, values)
+        if values['binding_key']:
+            del values['binding_key']
+
+        product = product_obj.browse(cr, uid, values['product_id'])
+        livebid = pool['cheape.livebid'].browse(cr, uid, values['livebid_id'])
+        partner = partner_obj.browse(cr, uid, values['partner_id'])
+        bid_ids = self.search(cr, uid, [('partner_id', '=', values['partner_id']), ('livebid_id', '=', data['livebid_id'])])
+        userbet = self.browse(cr, uid, bid_ids, context=None)
+
+        # Validate whether user has bids
+        if partner.bidscount < 1:
+            return False
+
+        if bid_ids:
+            # Update
+            val = [userbet.bids_spent, DEFAULT_BIDS_SPENT]
+            values['bids_spent'] = sum(val)
+            record = self.write(cr, uid, bid_ids, values)
+        else:
+            values['bids_spent'] = DEFAULT_BIDS_SPENT
+            values['bids_spent_value'] = float(1.0)
+            #record = self.create(cr, uid, values)
+            record = super(bet, self).create(cr, uid, values, context=context)
+
         # Increment totalbids spent on this livebid
         totalbids = livebid.totalbids + 1
         livebid_obj.write(cr, uid, [values['livebid_id']], {'totalbids': totalbids}, context=context)
-        # @todo publish totalbids for autobot to act upon
-        cr.commit()
-        with openerp.sql_db.db_connect('postgres').cursor() as cr2:
-            cr2.execute("notify livebet, %s", (json_dump(values),))
         # Update product_template with new bidprice
         product_obj.write(cr, uid, values['product_id'], {'bid_total': math.fsum([product.bid_total, livebid.raiser])})
         # Reduce user's bidpacks by livebid.bidpacks_qty
-        bidpacks_left = cheape_account_obj.reduce_bidpacks(cr, uid, partner_id, livebid.bidpacks_qty)
+        cheape_account_obj.reduce_bidpacks(cr, uid, values['partner_id'], livebid.bidpacks_qty)
+        d = {
+            'livebid_id': values['livebid_id'],
+            'partner_id': values['partner_id'],
+            'username': partner.user_id.userhash,
+            'auction_price': product.bid_total,
+            'binding_key': 'livebet'
+        }
+        _publish_livebet(d)
         # reset livebid.countdown and publish message back to client
         # return payload [bidpacks_left, bid_total]
         return record
@@ -196,19 +261,43 @@ class bet(models.Model):
         pass
 
     @api.multi
-    @api.depends('bids_spent_value', 'livebid_id')
+    @api.depends('bids_spent_value', 'livebid_id', 'partner_id')
     def _compute_buy_it_now_price(self):
-        # Retail price - bids_spent_value
-        # self = self.with_context(self.env['res.users'].context_get())
-        livebid = self.env['cheape.livebid'].browse([self.livebid_id])
-        retail_price = livebid.product_id.price
-        return reduce(lambda x, y: x-y, [retail_price, self.bids_spent_value])
+        """ Retail price - bids_spent_value """
+        #livebid = self.env['cheape.livebid'].browse()
+        #if livebid:
+            #retail_price = livebid.product_id.price
+            #res = reduce(lambda x, y: x-y, [retail_price, self.bids_spent_value])
+            #self.buy_it_now_price = res
+        rec = self.search([('livebid_id', '=', self.livebid_id.id), ('partner_id', '=', self.partner_id.id)])
+        if rec:
+            livebid = rec.livebid_id
+            retail_price = livebid.product_id.list_price
+            _logger.info("compute buy_it_now_price: retail_price %r" % retail_price)
+            res = reduce(lambda x, y: x-y, [retail_price, self.bids_spent_value])
+        else:
+            res = float(0)
+        self.buy_it_now_price = res
 
     @api.multi
-    @api.depends('bids_spent', 'livebid_id')
+    @api.depends('bids_spent', 'livebid_id', 'partner_id')
     def _compute_bids_spent_value(self):
-        livebid = self.env['cheape.livebid'].browse([self.livebid_id])
-        return self.bids_spent * livebid.bid_cost
+        # we browse on the recordset not the id becos of v8 API. see
+        # https://github.com/odoo/odoo/issues/9675
+        #livebid = self.env['cheape.livebid'].browse(self.livebid_id)
+        #if livebid:
+            #spent_bids = int(1) if self.bids_spent == 0 else self.bids_spent
+            #return spent_bids * livebid.bid_cost
+        #else:
+            #return float(1 * self.bids_spent)
+        rec = self.search([('livebid_id', '=', self.livebid_id.id), ('partner_id', '=', self.partner_id.id)])
+        if rec:
+            livebid = rec.livebid_id
+            res =  float(self.bids_spent * livebid.bid_cost)
+        else:
+            res = float(1 * self.bids_spent)
+        _logger.info("new bids_spent_value %r" % res)
+        self.bids_spent_value = res
 
 
 class livebid(models.Model):
@@ -339,7 +428,8 @@ class livebid(models.Model):
                         'heartbeat': record.heartbeat,
                         'wonby': record.wonby.id,
                         'power_switch': record.power_switch,
-                        'countdown': record.countdown
+                        'countdown': record.countdown,
+                        'binding_key': 'new'
                     }
 
                     #launcher.start(values)
@@ -433,7 +523,7 @@ class livebid(models.Model):
 
     def off(self, cr, uid, ids):
         """ Set power_switch to off, remove livebid from cheape_livebid_name """
-        #self.write(cr, uid, ids, {'power_switch': 'off'})
+        self.write(cr, uid, ids, {'power_switch': 'stop'})
         self.pool['cheape_livebid_name'].unlink_record(cr, SUPERUSER_ID, ids)
 
     def _livebid_by_product(self, cr, uid, product_id):
@@ -548,5 +638,34 @@ class autobid(models.Model):
     livebid_id = fields.Many2one('cheape.livebid', string="The livebid", required=True, ondelete='cascade')
     partner_id = fields.Many2one('res.partner', string="Customer", required=True)
     #conf = fields.Char(string="Autobid config", help="The autobid config")
-    num_of_bids = fields.Integer(help="")
+    num_of_bids = fields.Integer(help="", default=0)
     display_name = fields.Char()
+
+    def roll(self, cr, uid, data, context=None):
+        lid, pid = data.get('livebid_id'), data.get('partner_id')
+        del vals['binding_key']
+        vals = data.copy()
+        ids = self.search(cr, uid, [('livebid_id', '=', lid), ('partner_id', '=', pid)])
+        if ids:
+            autobids = self.browse(cr, uid, ids)
+            nob = sum([autobids.num_of_bids, data['num_of_bids']])
+            vals['num_of_bids'] = nob
+            record = self.write(cr, uid, ids,  vals)
+            vals['binding_key'] = 'autobid_reply'
+            _publish_autobids(vals)
+        else:
+            record = super(autobid, self).create(cr, uid, data, context=context)
+            vals['binding_key'] = 'autobid_reply'
+            _publish_autobids(vals)
+        return record
+
+    def complete_autobid(self, cr, uid, data):
+        """ Update num_of_bids after a successful completion of a round of autobids """
+        lid, pid = data.get('livebid_id'), data.get('partner_id')
+        ids = self.search(cr, uid, [('livebid_id', '=', lid), ('partner_id', '=', pid)])
+        if ids:
+            self.write(cr, uid, ids, {'num_of_bids': 0})
+
+    #def write(self, cr, uid, ids, data, context=None):
+        #result = super(autobid, self).write(cr, uid, ids, data, context=context) # return Boolean
+        #publish()

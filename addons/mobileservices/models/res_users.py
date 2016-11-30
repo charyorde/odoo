@@ -33,7 +33,10 @@ class res_users(models.Model):
             u = self.browse(cr, uid, [user_id])
             payload = ":".join([login, str(time.time()), str(user_id)])
             session_token = base64.b64encode(payload)
-            self.pool['res.users'].write(cr, uid, [user_id], {'session_token': session_token}, context=context)
+            vals = {'session_token': session_token}
+            if not u.userhash:
+                vals['userhash'] = self._generate_userhash()
+            self.pool['res.users'].write(cr, uid, [user_id], vals, context=context)
             message = {'session_token': session_token, 'email': login, 'uid': user_id}
             params = {
                 'exchange': 'users',

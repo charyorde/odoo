@@ -28,8 +28,8 @@ def _cheape_dispatch(db_name, entity_name, method_name, *method_args):
         _logger.exception('Failed to execute Cheape service method %s.', method_name)
         raise
 
-def exp_bet(db_name, uid, passwd, data, context):
-    return _cheape_dispatch(db_name, 'cheape.bet', 'bet', data, context)
+def exp_bet(db_name, uid, passwd, data, context=None):
+   return _cheape_dispatch(db_name, 'cheape.bet', 'bet', uid, data, context)
 
 def exp_cheape_products(db_name, uid, passwd, page=0, search='', category=None, kw=None, context=None):
     return _cheape_product_dispatch(db_name, 'cheape_products', uid, page, search, category, kw, context)

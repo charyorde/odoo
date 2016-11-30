@@ -85,7 +85,7 @@ class res_product(models.Model):
                                      'fin_structure_desc': product.fin_structure_desc,
                                      'fin_structure': product.fin_structure,
                                      'contract_term': product.contract_term,
-                                     'livebid_id': livebids.filtered(lambda l: l.product_id.id == product.id).product_id.id,
+                                     'livebid_id': livebids.filtered(lambda l: l.product_id.id == product.id).id,
                                      'bid_total': product.bid_total,
                                      'max_bid_price': product.max_bid_total
                                      }

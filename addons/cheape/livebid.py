@@ -15,15 +15,17 @@ from gevent.event import AsyncResult
 import openerp
 from openerp import SUPERUSER_ID
 from openerp.addons.website_greenwood.main import Config
+from openerp.modules.registry import RegistryManager
 
 import kombu
 from kombu.mixins import ConsumerMixin
 from kombu import Connection, Exchange, Consumer, Queue
+from multiprocessing import Process, JoinableQueue
 
-from socketIO_client import SocketIO, BaseNamespace
+#from socketIO_client import SocketIO, BaseNamespace
 promise = AsyncResult()
 
-logging.getLogger('socketIO-client').setLevel(logging.DEBUG)
+#logging.getLogger('socketIO-client').setLevel(logging.DEBUG)
 config = Config()
 settings = config.settings()
 
@@ -34,21 +36,21 @@ connection = Connection(settings.get('amqpurl'))
 
 _logger = logging.getLogger(__name__)
 
-def socket_session_token():
-    registry = openerp.modules.registry.Registry(db_name)
-    with registry.cursor() as cr:
-        cr.execute("SELECT session_token FROM res_users WHERE login = %s", ('system@greenwood.ng',))
-        return cr.fetchall()[0]
+#def socket_session_token():
+    #registry = openerp.modules.registry.Registry(db_name)
+    #with registry.cursor() as cr:
+        #cr.execute("SELECT session_token FROM res_users WHERE login = %s", ('system@greenwood.ng',))
+        #return cr.fetchall()[0]
 
-session_token = socket_session_token()
+#session_token = socket_session_token()
 
-class Namespace(BaseNamespace):
-    def on_connect(self):
-        self.emit('authenticate', {
-            'uid': 37,
-            'email': 'system@greenwood.ng',
-            'session_token': session_token
-        })
+#class Namespace(BaseNamespace):
+    #def on_connect(self):
+        #self.emit('authenticate', {
+            #'uid': 37,
+            #'email': 'system@greenwood.ng',
+            #'session_token': session_token
+        #})
 
 #sio = SocketIO(
     #settings.get('sio_server_host'),
@@ -146,13 +148,16 @@ class BidTask(Greenlet):
 
 
     def new_bid(self, message):
-        launcher.sio.emit('')
+        #launcher.sio.emit('')
+        pass
 
     def countdown(self, message):
-        launcher.sio.emit('countdown', message)
+        #launcher.sio.emit('countdown', message)
+        pass
 
     def autobid(self):
-        launcher.sio.emit('livebet', {})
+        #launcher.sio.emit('livebet', {})
+        pass
 
     def stop(self, data):
         #launcher.sio.emit('stop', data)
@@ -164,32 +169,6 @@ class BidTask(Greenlet):
             # @todo should update countdown with the latest value
             #cr.commit()
             Greenlet.kill(getcurrent(), timeout=2)
-
-
-    @staticmethod
-    def keepalive(self):
-        """ Our keepalive poller """
-        # For all the current livebids (islive), publish a bet, every
-        # 15 mins
-        _logger.info("Keeping alive livebids...")
-        dbname = openerp.tools.config['db_name']
-        registry = openerp.registry(dbname)
-        with registry.cursor() as cr:
-            cr.execute('SELECT * FROM cheape_livebid WHERE islive is True')
-            with SocketIO(settings.get('sio_server_host'), settings.get('sio_server_port'), LoggingNamespace) as socketIO:
-                while True:
-                    for livebid in dict(cr.fetchall()):
-                        if livebid:
-                            # select a random partner_id with group
-                            # cheape_bot_user
-                            socketIO.emit('livebet', {
-                                'd': dbname,
-                                'livebid_id': livebid.id,
-                                'partner_id': livebid.partner_id,
-                                'product_id': livebid.product_id
-                            })
-                            gevent.sleep(3)
-                    gevent.sleep(900)
 
     def _run(self):
         self.task()
@@ -242,28 +221,30 @@ class C(ConsumerMixin):
         print("RECEIVED BODY: %r" % (body, ))
         print("RECEIVED MESSAGE: %r" % (message, ))
         #registry = openerp.modules.registry.Registry(db_name)
-        registry = openerp.modules.registry.RegistryManager.get(db_name)
+        registry = RegistryManager.get(db_name)
         data = body
         if data.get('binding_key') == 'livebid':
             # write bet to db
-            d = data.get('d')
             values = {
                 'livebid_id': data.get('livebid_id'),
                 'product_id': data.get('product_id'),
                 'partner_id': data.get('partner_id'),
             }
-            registry['cheape.bet'].livebet(registry.cursor(), SUPERUSER_ID, values)
-            #try:
-                #with registry.cursor() as cr:
-                    #registry.get('cheape.bet').create(cr, SUPERUSER_ID, values)
-            #except:
-            #    pass
+            with registry.cursor() as cr:
+                registry.get('cheape.bet').livebet(cr, SUPERUSER_ID, values)
+
         if data.get('binding_key') == 'cleanup':
             with registry.cursor() as cr:
                 livebid_id = data.get('livebid_id')
-                #registry.get('cheape.livebid').off(registry.cursor(), SUPERUSER_ID, livebid_id)
-                cr.execute("DELETE FROM cheape_livebid_name WHERE livebid_id = %s", (livebid_id,))
-                cr.commit()
+                registry.get('cheape.livebid').off(cr, SUPERUSER_ID, livebid_id)
+                #cr.execute("DELETE FROM cheape_livebid_name WHERE livebid_id = %s", (livebid_id,))
+                #cr.commit()
+
+        if data.get('binding_key') == 'autobid':
+            with registry.cursor() as cr:
+                _logger.info("registry %r" % registry)
+                _logger.info("registry.get %r" % registry.get('cheape.autobid'))
+                registry.get('cheape.autobid').roll(cr, SUPERUSER_ID, data)
         message.ack()
 
 # Autobid
@@ -272,12 +253,13 @@ class C(ConsumerMixin):
 from collections import namedtuple
 class LiveBid(object):
     def __init__(self):
-        self.sio = SocketIO(
-            settings.get('sio_server_host'),
-            settings.get('sio_server_port'), Namespace,
-            params={'sessionid': session_token},
-            cookies={'JSESSIONID': session_token[0]}
-        )
+        #self.sio = SocketIO(
+            #settings.get('sio_server_host'),
+            #settings.get('sio_server_port'), Namespace,
+            #params={'sessionid': session_token},
+            #cookies={'JSESSIONID': session_token[0]}
+        #)
+        pass
 
     def start(self, data):
         if openerp.evented:
@@ -329,6 +311,9 @@ class LiveBid(object):
     def update(self, data):
         global promise
         promise.set(data)
+
+    def queue(self, data):
+        JoinableQueue().put(data)
 
     def run(self):
         if openerp.evented:
