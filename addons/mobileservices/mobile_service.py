@@ -98,6 +98,9 @@ def exp_post_file(db_name, uid, passwd, user_id, filename, data):
 def exp_create_userhash(db_name, uid, passwd, user_id, context=None):
     return _mobile_users_dispatch(db_name, 'create_userhash', user_id, context)
 
+def exp_forgot_password(db_name, uid, passwd, login, context=None):
+    return _mobile_users_dispatch(db_name, 'forgot_password', uid, login, context)
+
 def exp_verify_email(db_name, uid, passwd, params, context=None):
     return getattr(common, 'verify_email')(user_id, message)
 
@@ -125,6 +128,7 @@ def dispatch(method, params):
                   'send_email',
                   'create_userhash',
                   'verify_email',
+                  'forgot_password',
                   'logout',
                   ]:
         (db, uid, passwd) = params[0:3]

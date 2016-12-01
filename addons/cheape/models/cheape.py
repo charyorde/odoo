@@ -6,12 +6,28 @@ from datetime import timedelta
 import random
 import time
 
+import gevent
+from gevent import Greenlet, getcurrent
+from gevent.local import local
+from gevent.event import AsyncResult
+
 import openerp
 from openerp import models, fields, api
 from openerp import SUPERUSER_ID
-#from openerp.addons.cheape.livebid import launcher
 from openerp.addons.mobileservices.queue import produce, dist_queue
 import openerp.addons.decimal_precision as dp
+from openerp.addons.website_greenwood.main import Config
+from openerp.modules.registry import RegistryManager
+
+import kombu
+from kombu.mixins import ConsumerMixin
+from kombu import Connection, Exchange, Consumer, Queue
+
+config = Config()
+settings = config.settings()
+db_name = openerp.tools.config['db_name']
+registry = RegistryManager.get(db_name)
+connection = Connection(settings.get('amqpurl'))
 
 from hashids import Hashids
 
@@ -521,10 +537,16 @@ class livebid(models.Model):
         livebid_ids = self.search(cr, uid, [('islive', '=', True)], context=context)
         return self.browse(cr, uid, livebid_ids)
 
-    def off(self, cr, uid, ids):
+    @api.multi
+    @api.returns('self')
+    def off(self, ids):
         """ Set power_switch to off, remove livebid from cheape_livebid_name """
-        self.write(cr, uid, ids, {'power_switch': 'stop'})
-        self.pool['cheape_livebid_name'].unlink_record(cr, SUPERUSER_ID, ids)
+        #self.write(cr, uid, [ids], {'power_switch': 'stop'})
+        #self.pool['cheape_livebid_name'].unlink_record(cr, uid, ids)
+        self.write({'power_switch': 'stop'})
+        #self.pool['cheape_livebid_name'].unlink_record(cr, SUPERUSER_ID, ids)
+        name_obj = self.env['cheape_livebid_name'].search([('livebid_id', '=', ids)])
+        name_obj.unlink() if name_obj else None
 
     def _livebid_by_product(self, cr, uid, product_id):
         record = self.browse(cr, uid, [product_id])
@@ -567,8 +589,10 @@ class livebid_name(models.Model):
         hashids = Hashids(min_length=5, salt=salt)
         return hashids.encode(int(time.time()), random.randint(1, int(time.time())))
 
-    def unlink_record(self, cr, uid, ids):
-        record = self.browse(cr, uid, ids)
+    @api.multi
+    def unlink_record(self, ids):
+        #record = self.browse(cr, uid, ids)
+        record = self.browse([ids])
         if ids:
             record.unlink()
 
@@ -643,7 +667,7 @@ class autobid(models.Model):
 
     def roll(self, cr, uid, data, context=None):
         lid, pid = data.get('livebid_id'), data.get('partner_id')
-        del vals['binding_key']
+        del data['binding_key']
         vals = data.copy()
         ids = self.search(cr, uid, [('livebid_id', '=', lid), ('partner_id', '=', pid)])
         if ids:
@@ -669,3 +693,80 @@ class autobid(models.Model):
     #def write(self, cr, uid, ids, data, context=None):
         #result = super(autobid, self).write(cr, uid, ids, data, context=context) # return Boolean
         #publish()
+
+class C(ConsumerMixin):
+
+    def __init__(self, connection):
+        self.connection = connection
+
+    def get_consumers(self, Consumer, channel):
+        exchange = Exchange('socketio_forwarder', type='direct', durable=True)
+        livebid_ex = Exchange('livebid', type='direct', durable=True)
+        queue = Queue('', exchange, routing_key='forwarder')
+        cleanup_q = Queue('', livebid_ex, routing_key='cleanup')
+        return [
+            Consumer(queue, callbacks=[self.on_message]),
+            Consumer(cleanup_q, callbacks=[self.on_message]),
+        ]
+
+    def on_message(self, body, message):
+        global registry
+        print("RECEIVED BODY: %r" % (body, ))
+        print("RECEIVED MESSAGE: %r" % (message, ))
+        #registry = openerp.modules.registry.Registry(db_name)
+        #registry = RegistryManager.get(db_name)
+        data = body
+        if data.get('binding_key') == 'livebid':
+            # write bet to db
+            values = {
+                'livebid_id': data.get('livebid_id'),
+                'product_id': data.get('product_id'),
+                'partner_id': data.get('partner_id'),
+            }
+            with registry.cursor() as cr:
+                registry.get('cheape.bet').livebet(cr, SUPERUSER_ID, values)
+
+        if data.get('binding_key') == 'cleanup':
+            with registry.cursor() as cr:
+                livebid_id = data.get('livebid_id')
+                #env = api.Environment(cr, SUPERUSER_ID, {})
+                #livebid_obj = env['cheape.livebid']
+                #livebid = livebid_obj.browse(data.get('livebid_id'))
+                #livebid.off()
+                cr.execute("UPDATE cheape_livebid SET power_switch = 'stop' WHERE id = %s", (livebid_id,))
+                cr.execute("DELETE FROM cheape_livebid_name WHERE livebid_id = %s", (livebid_id,))
+                cr.commit()
+
+        if data.get('binding_key') == 'autobid':
+            with registry.cursor() as cr:
+                #registry.get('cheape.autobid').roll(cr, SUPERUSER_ID, data)
+                lid, pid = data.get('livebid_id'), data.get('partner_id')
+                del data['binding_key']
+                vals = data.copy()
+                cr.execute("SELECT livebid_id, partner_id, num_of_bids FROM cheape_autobid \
+                                 WHERE livebid_id = %s AND partner_id = %s", (lid, pid))
+                autobids = cr.dictfetchall()[0]
+                if autobids:
+                    nob = sum([autobids.get('num_of_bids'), data['num_of_bids']])
+                    vals['num_of_bids'] = nob
+                    cr.execute("UPDATE cheape_autobid SET num_of_bids = %s \
+                               WHERE livebid_id = %s AND partner_id = %s", (vals['num_of_bids'], lid, pid))
+                    vals['binding_key'] = 'autobid_reply'
+                    _publish_autobids(vals)
+                else:
+                    cr.execute("INSERT INTO cheape_autobid (livebid_id, partner_id, num_of_bids) \
+                               VALUES (%s, %s, %s)", (lid, pid, data.get('num_of_bids')))
+                    vals['binding_key'] = 'autobid_reply'
+                    _publish_autobids(vals)
+        message.ack()
+
+
+class LiveBid(object):
+    def run(self):
+        if openerp.evented:
+            gevent.spawn(C(connection).run())
+        return self
+
+launcher = LiveBid()
+launcher.run()
+

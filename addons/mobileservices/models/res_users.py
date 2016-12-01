@@ -190,3 +190,14 @@ class res_users(models.Model):
                 return login
             except SignupError:
                 raise access_denied_exception
+
+    def forgot_password(self, cr, uid, login, context=None):
+        try:
+            assert login, "No login provided"
+            self.reset_password(cr, uid, login, context=context)
+            msg = "An email has been sent with credentials to reset your password"
+        except Exception, e:
+            msg = e.message
+            _logger.exception('error when resetting password')
+        return msg
+
