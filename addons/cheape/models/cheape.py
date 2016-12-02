@@ -2,7 +2,7 @@
 import logging
 import simplejson
 import math
-from datetime import timedelta
+from datetime import timedelta, datetime
 import random
 import time
 
@@ -98,6 +98,7 @@ class cheape_account(models.Model):
     # A list of the current user's watchlist
     watchlist_ids = fields.One2many('cheape.watchlist', 'partner_id', help="A list of the current user's watchlist")
     #watchlist_ids = fields.Many2many('cheape.watchlist', compute='_my_watchlist', store=False, readonly=True, help="A list of the current user's watchlist")
+    last_free_bids_date = fields.Char(string="Last free bids date")
 
     def bid_history(self, cr, uid, partner_id, context=None):
         pool, values = self.pool, []
@@ -165,6 +166,18 @@ class cheape_account(models.Model):
 
         return l or [(0, _, _)]
 
+    def award_free_bids(self, cr, uid, partner_id, context=None):
+        partner = self.browse(cr, uid, [partner_id], context=context)
+        today = datetime.now().strftime('%Y-%m-%d')
+        if not partner:
+            return False, "Couldn't validate user"
+        if partner.last_free_bids_date != today:
+            bids = sum([partner.bidscount, 50])
+            self.write(cr, uid, [partner_id], {'bidscount': bids, 'last_free_bids_date': today})
+            return True, "Congratulations! You've been awarded 50 free bid packs"
+        else:
+            return False, "You've already used up your free bids for today."
+
 
 class bet(models.Model):
     """ A cheape bet """
@@ -186,6 +199,8 @@ class bet(models.Model):
         product = livebid.product_id
         partnerid = data.get('partner_id')
         partner = partner_obj.browse(cr, uid, [partnerid])
+        user_id = pool['res.users'].search(cr, uid, [('partner_id', '=', partnerid)], context=context)
+        user = pool['res.users'].browse(cr, uid, user_id, context=context)
         bid_ids = self.search(cr, uid, [('partner_id', '=', data['partner_id']), ('livebid_id', '=', data['livebid_id'])])
         userbet = self.browse(cr, uid, bid_ids, context=None)
         values = data.copy()
@@ -213,7 +228,7 @@ class bet(models.Model):
         d = {
             'livebid_id': values['livebid_id'],
             'partner_id': values['partner_id'],
-            'username': partner.user_id.userhash,
+            'username': user.userhash,
             'auction_price': product.bid_total,
             'binding_key': 'livebet'
         }

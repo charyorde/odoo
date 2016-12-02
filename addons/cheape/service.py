@@ -52,6 +52,9 @@ def exp_bid_history(db_name, uid, passwd, partner_id, context=None):
 def exp_account_update(db_name, uid, passwd, user_id, post, context=None):
     return _cheape_dispatch(db_name, 'res.users', 'account_update', uid, user_id, post, context)
 
+def exp_get_free_bids(db_name, uid, passwd, partner_id, context=None):
+    return _cheape_dispatch(db_name, 'res.partner', 'award_free_bids', uid, partner_id, context)
+
 def dispatch(method, params):
     if method in ['bet',
                   'cheape_products',
@@ -60,7 +63,8 @@ def dispatch(method, params):
                   'add_to_watchlist',
                   'my_watchlist',
                   'bid_history',
-                  'account_update'
+                  'account_update',
+                  'get_free_bids',
                   ]:
         (db, uid, passwd) = params[0:3]
         openerp.service.security.check(db, uid, passwd)

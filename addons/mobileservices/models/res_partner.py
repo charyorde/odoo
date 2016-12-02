@@ -23,10 +23,12 @@ class res_partner(models.Model):
         if partner_id:
             partner = self.browse(cr, SUPERUSER_ID, [partner_id], context=context)
             if not uid:
-                uid = partner.user_id.id
+                user_id = users.search(cr, SUPERUSER_ID, [('partner_id', '=', partner_id)], context=context)
+                user = users.browse(cr, SUPERUSER_ID, user_id, context=context)
+                uid = user_id[0]
         else:
-            user = users.browse(cr, SUPERUSER_ID, uid, context=context)
-            partner = users.browse(cr, SUPERUSER_ID, uid, context=context).partner_id
+            user = users.browse(cr, SUPERUSER_ID, [uid], context=context)
+            partner = users.browse(cr, SUPERUSER_ID, [uid], context=context).partner_id
         values = {
             'id': partner.id,
             'name': partner.name,
