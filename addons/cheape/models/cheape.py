@@ -192,6 +192,7 @@ class bet(models.Model):
 
     def bet(self, cr, uid, data, context=None):
         """ Non-livebid bet """
+        _logger.info("New bet %r" % data)
         pool = self.pool
         product_obj = pool['product.template']
         partner_obj = pool['res.partner']
@@ -315,12 +316,6 @@ class bet(models.Model):
     def _compute_bids_spent_value(self):
         # we browse on the recordset not the id becos of v8 API. see
         # https://github.com/odoo/odoo/issues/9675
-        #livebid = self.env['cheape.livebid'].browse(self.livebid_id)
-        #if livebid:
-            #spent_bids = int(1) if self.bids_spent == 0 else self.bids_spent
-            #return spent_bids * livebid.bid_cost
-        #else:
-            #return float(1 * self.bids_spent)
         rec = self.search([('livebid_id', '=', self.livebid_id.id), ('partner_id', '=', self.partner_id.id)])
         if rec:
             livebid = rec.livebid_id
@@ -329,6 +324,79 @@ class bet(models.Model):
             res = float(1 * self.bids_spent)
         _logger.info("new bids_spent_value %r" % res)
         self.bids_spent_value = res
+
+    @api.v7
+    def _machina_bid(self, cr, uid, context=None):
+        users_obj = self.pool['res.users']
+        livebet_obj = self.pool['cheape.bet']
+        machina_group_id = self.pool['ir.model.data'].get_object_reference(cr, uid, 'cheape', 'group_cheape_machina')[1]
+        user_ids = users_obj.search(cr, uid, [])
+        users = users_obj.browse(cr, uid, user_ids)
+        machinas = []
+        # users in group machinas
+        for user in users:
+            for g  in user.groups_id:
+                if g.id == machina_group_id:
+                    machinas.append(user)
+        #gids = [g.id for g in user.groups_id if g.id == machina_group_id for user in users]
+        #_logger.info("user group ids %r" % gids)
+        # Random selection of a machina
+        machina = random.choice(machinas)
+        # @todo Test for required total players
+        ids = self.pool['cheape.livebid'].search(cr, uid, [('power_switch', '=', 'on')])
+        livebids = self.pool['cheape.livebid'].browse(cr, uid, ids)
+        #livebids = [live_auctions] if len(live_auctions) == int(1) else live_auctions
+        if livebids is not None:
+            for record in livebids:
+                if record:
+                    current_auction_price = record.product_id.bid_total
+                    #product = self.env['product.template'].browse([record.product_id.id])
+                    #_logger.info("maximum_bids_total %r" % record.product_id.maximum_bids_total())
+                    if current_auction_price < record.product_id.maximum_bids_total():
+                        values = {
+                            'livebid_id': record.id,
+                            'product_id': record.product_id.id,
+                            'partner_id': machina.partner_id.id,
+                            'binding_key': 'livebet'
+                        }
+                        livebet_obj.bet(cr, uid, values)
+                        _logger.info("Machina placed a bet %r" % machina.login)
+
+    @api.v8
+    @api.multi
+    def _machina_bid(self):
+        users_obj = self.env['res.users']
+        livebet_obj = self.env['cheape.bet']
+        machina_group_id = self.env['ir.model.data'].get_object_reference('cheape', 'group_cheape_machina')[1]
+        users = users_obj.search([])
+        machinas = []
+        # users in group machinas
+        for user in users:
+            for g  in user.groups_id:
+                if g.id == machina_group_id:
+                    machinas.append(user)
+        _logger.info("machina %r" % machinas)
+        #gids = [g.id for g in user.groups_id if g.id == machina_group_id for user in users]
+        # Random selection of a machina
+        machina = random.choice(machinas)
+        # @todo Test for required total players
+        livebids = self.env['cheape.livebid'].search([('power_switch', '=', 'on')])
+        #livebids = [live_auctions] if len(live_auctions) == int(1) else live_auctions
+        if livebids is not None:
+            for record in livebids:
+                if record:
+                    current_auction_price = record.product_id.bid_total
+                    product = self.env['product.template'].browse([record.product_id.id])
+                    _logger.info("maximum_bids_total %r" % record.product_id.maximum_bids_total())
+                    if current_auction_price < record.product_id.maximum_bids_total():
+                        values = {
+                            'livebid_id': record.id,
+                            'product_id': record.product_id.id,
+                            'partner_id': machina.partner_id.id,
+                            'binding_key': 'livebet'
+                        }
+                        livebet_obj.bet(values)
+                        _logger.info("Machina placed a bet %r" % machina.login)
 
 
 class livebid(models.Model):
@@ -578,19 +646,6 @@ class livebid(models.Model):
         }
         return values
 
-    def machina_bid(self, cr, uid, data):
-        livebet_obj = self.pool['cheape.bet']
-        # partners in group machinas
-        machinas = None
-        # Random selection of a machina
-        machina = None
-        lb_id = data.get('livebid_id')
-        record = self.browse(cr, uid, [lb_id])
-        # @todo Test for required total players
-        current_auction_price = record.product_id.bid_total
-        if current_auction_price < record.product_id.max_bid_total:
-            values = {}
-            livebet_obj.livebet(cr, uid, values)
 
 
 class livebid_name(models.Model):
@@ -766,11 +821,13 @@ class C(ConsumerMixin):
                     vals['num_of_bids'] = nob
                     cr.execute("UPDATE cheape_autobid SET num_of_bids = %s \
                                WHERE livebid_id = %s AND partner_id = %s", (vals['num_of_bids'], lid, pid))
+                    cr.commit()
                     vals['binding_key'] = 'autobid_reply'
                     _publish_autobids(vals)
                 else:
                     cr.execute("INSERT INTO cheape_autobid (livebid_id, partner_id, num_of_bids) \
                                VALUES (%s, %s, %s)", (lid, pid, data.get('num_of_bids')))
+                    cr.commit()
                     vals['binding_key'] = 'autobid_reply'
                     _publish_autobids(vals)
         message.ack()

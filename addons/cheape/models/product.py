@@ -1,3 +1,4 @@
+import math
 import logging
 
 from openerp import models, fields, api
@@ -20,7 +21,36 @@ class res_product(models.Model):
     _inherit = 'product.template'
 
     bid_total = fields.Float(string="Bid total", required=True, default=float(0.0), help="Total bids on a Cheape product")
-    max_bid_total = fields.Float(string="Max bid total", required=True, default=float(0.0), help="The maximum bid total allowed for this product")
+    max_bid_total = fields.Float(string="Max bid total", compute='_compute_max_bid_total',
+                                 store=True, required=True, help="The maximum bid total allowed for this product")
+
+    @api.depends('list_price')
+    def _compute_max_bid_total(self, cr, uid, id, context=None):
+        rec = self.browse(cr, uid, id, context=context)
+        ids = self.pool['cheape.livebid'].search(cr, uid, [('product_id', '=', id)])
+        livebid = self.pool['cheape.livebid'].browse(cr, uid, ids)
+        _logger.info("_compute_max_bid_price %r" % livebid)
+        if livebid:
+            retail_price = rec.list_price
+            estimated_total_bids_spent = float(livebid.raiser * retail_price)
+            margin = float(estimated_total_bids_spent / 2)
+            res = math.fsum([estimated_total_bids_spent, margin])
+        else:
+            res = float(0.0)
+        self.max_bid_total = res
+
+    def maximum_bids_total(self, cr, uid, id, context=None):
+        rec = self.browse(cr, uid, id, context=context)
+        ids = self.pool['cheape.livebid'].search(cr, uid, [('product_id', '=', id)])
+        livebid = self.pool['cheape.livebid'].browse(cr, uid, ids)
+        if livebid:
+            retail_price = rec.list_price
+            estimated_total_bids_spent = livebid.raiser * retail_price
+            margin = float(estimated_total_bids_spent / 2)
+            res = math.fsum([estimated_total_bids_spent, margin])
+        else:
+            res = float(0.0)
+        return res
 
     def cheape_products(self, cr, uid, page=0, search='', category=None, kw=None, context=None):
         pool = self.pool

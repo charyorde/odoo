@@ -1,2 +1,2 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_cheape_cheape,cheape.cheape,model_cheape_cheape,,1,0,0,0
+access_cheape_bet_user,access_cheape_bet User,model_cheape_bet,group_cheape_machina,1,1,1,0
