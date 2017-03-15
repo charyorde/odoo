@@ -24,9 +24,11 @@
         'views/templates.xml',
         'views/interswitch.xml',
         'views/nibsscmms.xml',
+        'views/paystack.xml',
         'data/interswitch.xml',
         'data/nibsscmms.xml',
         'data/interswitchauto.xml',
+        'data/paystack.xml'
     ],
     'installable': True,
 }

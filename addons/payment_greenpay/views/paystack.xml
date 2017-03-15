@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+  <data noupdate="1">
+    <template id="paystack_acquirer_button">
+      <form t-if="acquirer" t-att-action="tx_url" method="post" target="_self">
+        <input type="hidden" name="amount" t-att-value="tx_values['amount']"/>
+        <input type="hidden" name="callback_url" t-att-value="tx_values['callback_url']"/>
+        <input type="hidden" name="reference" t-att-value="tx_values['reference']"/>
+        <input type="hidden" name="email" t-att-value="tx_values['email']"/>
+        <input type="hidden" name="metadata" t-att-value="tx_values['metadata']"/>
+        <!--input t-if="cancel_return" type="hidden" name="tx_values['cancel_return']" t-att-value="cancel_return"/-->
+        <button type="submit" width="100px" t-att-class="submit_class">
+          <span t-if="submit_txt">
+            <t t-esc="submit_txt"/>
+            <span class="fa fa-long-arrow-right"/>
+          </span>
+        </button>
+      </form>
+    </template>
+  </data>
+</openerp>

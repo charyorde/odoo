@@ -1,11 +1,12 @@
 import logging
+import urlparse
 
 # from openerp import models, fields, api, SUPERUSER_ID
 from openerp import api, SUPERUSER_ID
 from openerp.osv import osv, fields
 
 from openerp.addons.payment_greenpay.controllers.main import InterswitchController
-
+_logger = logging.getLogger(__name__)
 
 class nibss_cmms(osv.Model):
     _name = 'payment.acquirer'
@@ -54,7 +55,7 @@ class nibss_cmms(osv.Model):
     def nibsscmms_get_form_action_url(self, cr, uid, id, context=None):
         """ Callback URL given to interswitch """
         acquirer = self.browse(cr, uid, id, context=context)
-        return self._get_nibss_cmms_endpoints(cr, uid, acquirer.environment, context=context)['interswitch_form_url']
+        return self._get_nibss_cmms_endpoints(cr, uid, acquirer.environment, context=context)['cmms_form_url']
 
 class TxNibssCmms(osv.Model):
     _inherit = 'payment.transaction'

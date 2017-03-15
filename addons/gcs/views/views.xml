@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+  <data>
+    <record id="view_gcs_instance_pricing_form" model="ir.ui.view">
+      <field name="name">gcs.instance.pricing.form</field>
+      <field name="model">gcs.instance.pricing</field>
+      <field name="mode">primary</field>
+      <field name="arch" type="xml">
+        <form string="Virtual Server Pricing">
+          <sheet>
+            <group>
+              <group>
+                <field name="name"/>
+                <field name="display_name"/>
+                <field name="pricing_type"/>
+                <field name="resource_type"/>
+                <field name="operating_system"/>
+                <field name="price" attrs="{'invisible': [('pricing_type','=', 'on-demand')]}"/>
+                <field name="hourly_rate" attrs="{'invisible': [('pricing_type','=', 'reserved')]}"/>
+                <field name="ram" attrs="{'invisible': [('resource_type', '=', 'volume')]}"/>
+                <field name="cpu" attrs="{'invisible': [('resource_type', '=', 'volume')]}"/>
+                <field name="disk"/>
+              </group>
+              <group>
+                <field name="bandwidth" attrs="{'invisible': [('resource_type', '=', 'volume')]}"/>
+                <field name="country_code"/>
+              </group>
+            </group>
+          </sheet>
+        </form>
+      </field>
+    </record>
+    <record id="view_gcs_instance_pricing_tree" model="ir.ui.view">
+      <field name="name">gcs.instance.pricing.tree</field>
+      <field name="model">gcs.instance.pricing</field>
+      <field name="arch" type="xml">
+        <tree string="Instance Pricing">
+          <field name="name"/>
+          <field name="display_name"/>
+          <field name="pricing_type"/>
+          <field name="resource_type"/>
+          <field name="operating_system"/>
+          <field name="hourly_rate" attrs="{'invisible': [('pricing_type','=', 'reserved')]}"/>
+          <field name="ram"/>
+          <field name="cpu"/>
+          <field name="disk"/>
+          <field name="bandwidth"/>
+          <field name="country_code"/>
+        </tree>
+      </field>
+    </record>
+    <record id="action_gcs_instance_pricing" model="ir.actions.act_window">
+      <field name="name">Instance Pricing</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">gcs.instance.pricing</field>
+      <field name="view_mode">tree,form</field>
+      <field name="view_type">form</field>
+      <field name="help">Add new Instance Pricing. Instance Pricing can be On-demand or Reserved(Fixed)</field>
+      <field name="view_id" ref="view_gcs_instance_pricing_tree"/>
+    </record>
+    <menuitem id="menu_gcs_instance_pricing" parent="website_greenwood.menu_gcs" action="action_gcs_instance_pricing"/>
+    
+    <!-- product view inheritance -->
+    <record model="ir.ui.view" id="product_template_form_view">
+        <field name="name">product.template.form.gcs.inherit</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <page string="Sales" position="after">
+                <page name="cloud" string="Cloud">
+                    <group string="Cloud Pricing" name="pricing">
+                        <field name="cloud_pricing"/>
+                    </group>
+                </page>
+            </page>
+        </field>
+    </record>
+  </data>
+</openerp>

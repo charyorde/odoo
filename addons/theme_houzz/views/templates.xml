@@ -11,6 +11,129 @@
         <script src="/theme_houzz/static/src/js/jquery.fileupload.js" type="text/javascript"/>
       </xpath>
     </template>
+    <template id="invoice">
+      <link rel="stylesheet" type="text/css" href="/theme_houzz/static/src/css/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/theme_houzz/static/src/css/app.css"/>
+        <link rel="stylesheet" href="/theme_houzz/static/src/css/houzz.fix.css"/>
+      <link rel="stylesheet" type="text/css" href="/theme_houzz/static/src/css/misc.css"/>
+      <script type="text/javascript" src="/theme_houzz/static/src/js/jquery-2.2.4.min.js"/>
+      <script src="/theme_houzz/static/src/js/bootstrap.min.js" type="text/javascript"/>
+      <div class="container">
+        <div class="invoice-wrap">
+          <div class="row">
+            <div class="col-xs-12">
+              <div class="img-wrap">
+                <img src="/theme_houzz/static/src/img/logo-icon.png" class="img-responsive"/>
+              </div>
+              <h3 class="pull-right">UNPAID</h3>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12">
+              <div class="invoice-title">
+                  <h4>Invoice <t t-raw="number"/></h4>
+              </div>
+              <hr/>
+              <div class="row">
+                <div class="col-xs-6">
+                  <address>
+                    <strong>Invoiced To:</strong>
+                    <br><t t-raw="cust_name"/></br>
+                    <!--<br> Location X</br>-->
+                    <!--<br> Lagos, Nigeria.</br>-->
+                  </address>
+                </div>
+                <div class="col-xs-6 text-right">
+                  <address>
+                    <strong>Pay To:</strong>
+                    <br><t t-raw="company"/></br>
+                    <!--<br> 3 &amp; 23rd Street, </br>-->
+                    <!--<br> Ibeshe, Ikorodu, </br>-->
+                    <!--<br> Lagos Nigeria. </br>-->
+                  </address>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-xs-6">
+                  <div class="row">
+                    <div class="col-xs-6">
+                        <div t-att-data-id="acquirer.id" class="oe_sale_acquirer_button">
+                            <div t-raw="acquirer.button"/>
+                            <div t-field="acquirer.pre_msg"/>
+                        </div>
+                      <!--<form>-->
+                        <!--<select class="form-control">-->
+                          <!--<option><t t-raw="payment_acquirer"/></option>-->
+                        <!--</select>-->
+                      <!--</form>-->
+                    </div>
+                  </div>
+                </div>
+                <div class="col-xs-6 text-right">
+                  <address>
+                    <strong>Invoice Date:</strong>
+                    <br><t t-raw="date_invoice"/></br>
+                    <br/>
+                    <br/>
+                  </address>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="panel panel-default panel-invoice">
+                <div class="panel-heading">
+                  <h3 class="panel-title">
+                    <strong>Invoice Items</strong>
+                  </h3>
+                </div>
+                <div class="panel-body">
+                  <div class="table-responsive">
+                    <table class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>Description</th>
+                          <th>Quantity</th>
+                          <th>Unit Price</th>
+                          <th class="text-right">
+                            <strong>Amount</strong>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <t t-foreach="lines" t-as="line">
+                          <tr>
+                            <td><t t-raw="line['name']"/></td>
+                            <td><t t-raw="line['quantity']"/></td>
+                            <td><t t-raw="line['price_unit']"/></td>
+                            <td class="text-right"><span><t t-raw="symbol"/><t t-raw="line['amount']"/></span></td>
+                          </tr>
+                        </t>
+                        <tr>
+                          <td class="no-line"/>
+                          <td class="no-line"/>
+                          <td class="no-line text-right"/>
+                          <td class="text-right"><span><strong>Total: </strong><t t-raw="symbol"/><t t-raw="amount"/></span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              <div class="text-right">
+                <button class="btn btn-default">Print</button>
+                <!--<button class="btn btn-primary">Download</button>-->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
     <template id="layout" inherit_id="website.layout">
       <xpath expr="//*[@id='wrapwrap']/header/div[@class='navbar navbar-default navbar-static-top']" position="replace">
         <div class="navbar navbar-default navbar-static-top app-navbar pc">
@@ -125,9 +248,10 @@
                   <a id="add_to_cart" class="btn btn-primary btn-lg mt8 js_check_product a-submit" href="#">Add to Cart</a>
                 </div>
               </form>
-              <hr t-if="product.description_sale"/>
-              <div>
-                <p t-field="product.description_sale" class="text-muted"/>
+              <!--<hr t-if="product.description_sale"/>-->
+              <hr t-if="product.fin_structure_desc"/>
+              <div><!--<p t-field="product.description_sale" class="text-muted"/>--><p t-field="product.fin_structure_desc" class="text-muted"/>
+                Contract term: <p t-field="product.contract_term" class="text-muted"/>
               </div>
               <hr/>
               <!--p class="text-muted">
@@ -874,54 +998,54 @@
     </template>
     <template id="footer_default" inherit_id="website.footer_default" customize_show="True" name="Automatic Footer">
       <xpath expr="//div[@class='row']" position="replace">
-          <div class="row">
-            <div class="col-md-3">
-              <h4>Our products &amp; Services</h4>
-              <ul class="list-unstyled" id="products">
-                <li>
-                  <a href="/">Home</a>
-                </li>
-              </ul>
-            </div>
-            <div class="col-md-3" id="info">
-              <h4>Connect with us</h4>
-              <ul class="list-unstyled">
-                <li>
-                  <a href="/page/website.contactus">Contact us</a>
-                </li>
-              </ul>
-              <ul class="list-unstyled">
-                <li t-ignore="true">
-                  <i class="fa fa-phone"/>
-                  <span t-field="res_company.phone"/>
-                </li>
-                <li t-ignore="true">
-                  <i class="fa fa-envelope"/>
-                  <span t-field="res_company.email"/>
-                </li>
-              </ul>
-              <h2>
-                <a t-att-href="website.social_facebook" t-if="website.social_facebook">
-                  <i class="fa fa-facebook-square"/>
-                </a>
-                <a t-att-href="website.social_twitter" t-if="website.social_twitter">
-                  <i class="fa fa-twitter"/>
-                </a>
-                <a t-att-href="website.social_linkedin" t-if="website.social_linkedin">
-                  <i class="fa fa-linkedin"/>
-                </a>
-                <a t-att-href="website.social_youtube" t-if="website.social_youtube">
-                  <i class="fa fa-youtube-play"/>
-                </a>
-                <a t-att-href="website.social_googleplus" t-if="website.social_googleplus" rel="publisher">
-                  <i class="fa fa-google-plus-square"/>
-                </a>
-                <a t-att-href="website.social_github" t-if="website.social_github">
-                  <i class="fa fa-github"/>
-                </a>
-              </h2>
-            </div>
-            <!--div class="col-md-5 col-lg-offset-1">
+        <div class="row">
+          <div class="col-md-3">
+            <h4>Our products &amp; Services</h4>
+            <ul class="list-unstyled" id="products">
+              <li>
+                <a href="/">Home</a>
+              </li>
+            </ul>
+          </div>
+          <div class="col-md-3" id="info">
+            <h4>Connect with us</h4>
+            <ul class="list-unstyled">
+              <li>
+                <a href="/page/website.contactus">Contact us</a>
+              </li>
+            </ul>
+            <ul class="list-unstyled">
+              <li t-ignore="true">
+                <i class="fa fa-phone"/>
+                <span t-field="res_company.phone"/>
+              </li>
+              <li t-ignore="true">
+                <i class="fa fa-envelope"/>
+                <span t-field="res_company.email"/>
+              </li>
+            </ul>
+            <h2>
+              <a t-att-href="website.social_facebook" t-if="website.social_facebook">
+                <i class="fa fa-facebook-square"/>
+              </a>
+              <a t-att-href="website.social_twitter" t-if="website.social_twitter">
+                <i class="fa fa-twitter"/>
+              </a>
+              <a t-att-href="website.social_linkedin" t-if="website.social_linkedin">
+                <i class="fa fa-linkedin"/>
+              </a>
+              <a t-att-href="website.social_youtube" t-if="website.social_youtube">
+                <i class="fa fa-youtube-play"/>
+              </a>
+              <a t-att-href="website.social_googleplus" t-if="website.social_googleplus" rel="publisher">
+                <i class="fa fa-google-plus-square"/>
+              </a>
+              <a t-att-href="website.social_github" t-if="website.social_github">
+                <i class="fa fa-github"/>
+              </a>
+            </h2>
+          </div>
+          <!--div class="col-md-5 col-lg-offset-1">
               <div>
                 <h4>
                   <span t-field="res_company.name"/>
@@ -951,8 +1075,8 @@
                 </li>
               </ul>
             </div-->
-          </div>
-        </xpath>
+        </div>
+      </xpath>
     </template>
     <template id="layout_footer_copyright" inherit_id="website.layout_footer_copyright" name="Footer Copyright">
       <xpath expr="//footer//div[@class='container mt16 mb8']" position="replace">
@@ -971,14 +1095,13 @@
             </xpath>
     </template>
     <template id="auth_oauth.signup" inherit_id="auth_signup.signup" name="OAuth Signup buttons">
-            <xpath expr="//button[@type='submit']" position="before">
+      <xpath expr="//button[@type='submit']" position="before">
             </xpath>
-        </template>
-
-        <template id="auth_oauth.reset_password" inherit_id="auth_signup.reset_password" name="OAuth Reset Password buttons">
-            <xpath expr="//button[@type='submit']" position="before">
+    </template>
+    <template id="auth_oauth.reset_password" inherit_id="auth_signup.reset_password" name="OAuth Reset Password buttons">
+      <xpath expr="//button[@type='submit']" position="before">
             </xpath>
-        </template>
+    </template>
     <!--template id="homepage" name="Homepage" inherit_id="website.homepage">
       <xpath expr="//*[@id='wrap']" position="inside">
         <t t-foreach="main" t-as="mimgs">

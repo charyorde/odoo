@@ -21,7 +21,7 @@
     # always loaded
     'data': [
         'views/templates.xml',
-        'views/snippets.xml'
+        'views/snippets.xml',
     ],
     'auto_install':False,
     'installable': True,

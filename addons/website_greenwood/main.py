@@ -71,12 +71,14 @@ class Config():
             env.update({
                 'backend_host': 'https://www.greenwood.ng',
                 'mobile_virtual_host': 'https://www.greenwood.ng',
+                'gcs_endpoint': 'http://greencloud.greenwood.ng'
             })
             return env
         else:
             env.update({
                 'backend_host': 'https://odoo',
                 'mobile_virtual_host': 'https://192.168.56.1',
+                'gcs_endpoint': 'http://0.0.0.0:5000'
             })
             return env
 

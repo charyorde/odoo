@@ -435,20 +435,8 @@ class WebsiteGreenwood(http.Controller):
             return request.render('theme_houzz.profile_edit_company', values)
 
 
-class GreenwoodOrderController(website_sale):
 
-    # @http.route()
-    # def cart(self, **post):
-    #    print "\n\n>>>>>>>>/shop/cart override>>>>>\n"
-    #    print "\nrequest.path is", request.httprequest.path
-    #    print "\nrequest.request is", request.httprequest
-        # _logger.info("/shop/cart override")
-        # If user is not logged in, redirect to /verify?redirect=/shop/cart
-        # if not request.session.uid:
-        #    qp = '?'
-        #    return werkzeug.utils.redirect('/verify', 303)
-        # return super(GreenwoodOrderController, self).cart(post=post)
-    #    pass
+class GreenwoodOrderController(website_sale):
 
     @http.route()
     def checkout(self, **post):
@@ -662,15 +650,8 @@ class GreenwoodWebLogin(Website):
     @http.route()
     def index(self, **kw):
         cr, context, pool = request.cr, request.context, request.registry
-        # promo/main/
-        # promo/featured
-        # promo/reco
-        # promo/most-viewed
         product_template_obj = pool.get('product.template')
         product_ids = product_template_obj.search(cr, SUPERUSER_ID, [('promo_sale','=',True)])
-        _logger.info(">>> Product ids %r" % product_ids)
-        _logger.info(">>> App %r" % request.httprequest.app)
-        _logger.info(">>> request.website %r" % request.website)
         main_section = []
         for id in product_ids:
             product = product_template_obj.browse(cr, SUPERUSER_ID, [id])

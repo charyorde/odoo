@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+  <data noupdate="1">
+    <record id="sibon" model="res.users">
+        <field name="active">t</field>
+        <field name="create_uid">base.user_root</field>
+        <field name="create_date">2016-12-06 16:52:40</field>
+        <field name="employee">False</field>
+        <field name="is_company">False</field>
+        <field name="function"></field>
+        <field name="write_uid">base.user_root</field>
+        <field name="write_date">2016-12-06 16:52:40</field>
+        <field name="last_free_bids_date"></field>
+        <field name="login">sibon</field>
+        <field name="name">sibon</field>
+        <field name="groups_id">base.group_public,share.group_share_user,cheape.group_cheape_machina</field>
+        <field name="userhash">sibon</field>
+    </record>
+</data>
+</openerp>

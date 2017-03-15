@@ -504,8 +504,6 @@ class livebid(models.Model):
             if 'power_switch' in data:
                 if data['power_switch'] == 'on':
                     _logger.info("Creating new livebid %r" % (ids))
-                    #livebid_name = livebid_name_obj._generate_livebid_name()
-                    #livebid_obj.write(cr, uid, name_row_ids, {'name': livebid_name})
                     livebid_name_obj.create(cr, uid, {'name': row.name, 'livebid_id': ids[0]})
                     record = self.browse(cr, uid, ids)
                     autobids = []
@@ -782,9 +780,6 @@ class C(ConsumerMixin):
     def on_message(self, body, message):
         global registry
         print("RECEIVED BODY: %r" % (body, ))
-        print("RECEIVED MESSAGE: %r" % (message, ))
-        #registry = openerp.modules.registry.Registry(db_name)
-        #registry = RegistryManager.get(db_name)
         data = body
         if data.get('binding_key') == 'livebid':
             # write bet to db
@@ -799,10 +794,6 @@ class C(ConsumerMixin):
         if data.get('binding_key') == 'cleanup':
             with registry.cursor() as cr:
                 livebid_id = data.get('livebid_id')
-                #env = api.Environment(cr, SUPERUSER_ID, {})
-                #livebid_obj = env['cheape.livebid']
-                #livebid = livebid_obj.browse(data.get('livebid_id'))
-                #livebid.off()
                 cr.execute("UPDATE cheape_livebid SET power_switch = 'stop' WHERE id = %s", (livebid_id,))
                 cr.execute("DELETE FROM cheape_livebid_name WHERE livebid_id = %s", (livebid_id,))
                 cr.commit()
@@ -841,4 +832,3 @@ class LiveBid(object):
 
 launcher = LiveBid()
 launcher.run()
-

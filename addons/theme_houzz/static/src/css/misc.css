@@ -1,0 +1,48 @@
+/*body {*/
+	/*background: #ECEFF1;*/
+/*}*/
+.invoice-wrap {
+	background: #fff;
+	padding: 2.4em 2.4em 5em;
+	margin: 2em 0;
+	box-shadow: 0 1px 2px 1px #D3D2D3;
+	border-radius: 2px;
+}
+.invoice-title h2, .invoice-title h3 {
+  display: inline-block;
+}
+.table > tbody > tr > .no-line {
+  border-top: none;
+}
+.table > thead > tr > .no-line {
+  border-bottom: none;
+}
+.table > tbody > tr > .thick-line {
+  border-top: 2px solid;
+}
+.no-margin {
+	margin: 0;
+}
+.img-wrap {
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	overflow: hidden;
+	display: block;
+	float: left;
+	width: 80px;
+	height: 80px;
+	margin: 0 0 10px;
+}
+#invoice select {
+	margin-top: 4px;
+}
+@media (min-width: 1200px) {
+	.container {
+		width: 840px;
+	}
+}
+@media (min-width: 992px) {
+	.container {
+		width: 840px;
+	}
+}

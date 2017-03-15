@@ -19,7 +19,11 @@
     <template id="newsletter_optin" inherit_id="website.snippets">
       <xpath expr="//div[@id='snippet_structure']" position="inside">
         <t t-snippet="theme_houzz.snippet_newsletter_optin" t-thumbnail="/theme_houzz/static/src/img/mailing-list-backdrop.png"/>
+        <t t-snippet="theme_houzz.paynow" t-thumbnail="/theme_houzz/static/src/img/pay-button.png"/>
       </xpath>
+    </template>
+    <template id="paynow">
+        <div id="pay-btn-email"></div>
     </template>
   </data>
 </openerp>

@@ -22,9 +22,9 @@ class res_product(models.Model):
 
     bid_total = fields.Float(string="Bid total", required=True, default=float(0.0), help="Total bids on a Cheape product")
     max_bid_total = fields.Float(string="Max bid total", compute='_compute_max_bid_total',
-                                 store=True, required=True, help="The maximum bid total allowed for this product")
+                                 store=True, default=float(0.0), required=True, help="The maximum bid total allowed for this product")
 
-    @api.depends('list_price')
+    #@api.depends('list_price')
     def _compute_max_bid_total(self, cr, uid, id, context=None):
         rec = self.browse(cr, uid, id, context=context)
         ids = self.pool['cheape.livebid'].search(cr, uid, [('product_id', '=', id)])

@@ -1,0 +1,6 @@
+"id","active","create_uid/id","create_date","employee","is_company","function","write_uid/id","write_date","last_free_bids_date","login","name","groups_id/id","userhash"
+"0001234","True","base.user_root","2016-12-06 16:52:40","False","False","","base.user_root","2016-12-06 16:52:40","","sibon","sibon","base.group_public,share.group_share_user,cheape.group_cheape_machina","sibon"
+"0001235","True","base.user_root","2016-12-06 16:52:40","False","False","","base.user_root","2016-12-06 16:52:40","","keleya","keleya","base.group_public,share.group_share_user,cheape.group_cheape_machina","keleya"
+"0001236","True","base.user_root","2016-12-06 16:52:40","False","False","","base.user_root","2016-12-06 16:52:40","","ayinda","ayinda","base.group_public,share.group_share_user,cheape.group_cheape_machina","ayinda"
+"0001237","True","base.user_root","2016-12-06 16:52:40","False","False","","base.user_root","2016-12-06 16:52:40","","mapelepele","mapelepele","base.group_public,share.group_share_user,cheape.group_cheape_machina","mapelepele"
+"0001238","True","base.user_root","2016-12-06 16:52:40","False","False","","base.user_root","2016-12-06 16:52:40","","simba","simba","base.group_public,share.group_share_user,cheape.group_cheape_machina","simba"

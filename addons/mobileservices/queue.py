@@ -8,6 +8,7 @@ connection = Connection(amqp_url)
 
 # Cheape Livebid default Queue definition
 livebid_exchange = Exchange("livebid", type="direct", durable=True)
+gcs_exchange = Exchange("gcs", type="direct", durable=True)
 autobid_queue = Queue("autobids", livebid_exchange, routing_key='autobids')
 
 def produce(message, **kwargs):

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+  <data noupdate="1">
+    <record id="payment_acquirer_paystack" model="payment.acquirer">
+      <field name="name">Paystack</field>
+      <field name="provider">paystack</field>
+      <field name="company_id" ref="base.main_company"/>
+      <field name="view_template_id" ref="paystack_acquirer_button"/>
+      <field name="environment">test</field>
+      <field name="validation">automatic</field>
+      <field name="website_published">t</field>
+      <field name="paystack_api_access_token"></field>
+      <field name="paystack_api_test_access_token">sk_test_cc3888953b8fed26272697c15f4894f94ec7ef54</field>
+    </record>
+  </data>
+</openerp>

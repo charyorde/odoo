@@ -30,9 +30,6 @@ class product_template(models.Model):
     _inherit = 'product.template'
 
     def _get_search_domain(self, search, category, attrib_values):
-        # domain = website.sale_product_domain()
-        # domain = request.website.sale_product_domain()
-        # domain = self.pool.get('website').sale_product_domain()
         domain = [("sale_ok", "=", True)]
 
         if search:
