@@ -248,9 +248,13 @@
                   <a id="add_to_cart" class="btn btn-primary btn-lg mt8 js_check_product a-submit" href="#">Add to Cart</a>
                 </div>
               </form>
-              <!--<hr t-if="product.description_sale"/>-->
+              <hr t-if="product.description_sale"/>
+              <div>
+                  <p t-field="product.description_sale" class="text-muted"/>
+              </div>
+              <hr/>
               <hr t-if="product.fin_structure_desc"/>
-              <div><!--<p t-field="product.description_sale" class="text-muted"/>--><p t-field="product.fin_structure_desc" class="text-muted"/>
+              <div><p t-field="product.fin_structure_desc" class="text-muted"/>
                 Contract term: <p t-field="product.contract_term" class="text-muted"/>
               </div>
               <hr/>
