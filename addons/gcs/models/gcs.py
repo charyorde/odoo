@@ -99,9 +99,9 @@ class instance_pricing(models.Model):
             'resource_type': record.resource_type,
             'hourly_rate': round(record.hourly_rate, prec)
         }
-        url = '%s/v1/vm/pricing' % settings.get('gcs_endpoint')
-        _logger.info("::Instance pricing create %r" % values)
-        requests.post(url, data=json.dumps(values))
+        #url = '%s/v1/vm/pricing' % settings.get('gcs_endpoint')
+        #_logger.info("::Instance pricing create %r" % values)
+        #requests.post(url, data=json.dumps(values))
         return res_id
 
     def write(self, cr, uid, ids, data, context=None):
@@ -170,6 +170,18 @@ class product_template(models.Model):
         products = self.browse(cr, uid, ids, context=context)
         return products
 
+    def get_cloud_offerings(self, cr, uid, flavors, currency):
+        offerings = []
+
+        for f in flavors:
+            terms = {'name': f['name'], 'currency': currency}
+            vals = self.get_cloud_product(cr, uid, terms)
+            if vals:
+                vals['id'] = f['id']
+                vals['name'] = f['name']
+                offerings.append(vals)
+        return offerings
+
     def get_cloud_product(self, cr, uid, terms):
         products = self.cloud_products(cr, uid)
         res = {}
@@ -196,11 +208,11 @@ class product_template(models.Model):
         _logger.info("flavor %r" % flavor)
         currency = product.pricelist_item_ids.currency_name
         flavor['currency_symbol'] = currency.symbol
-        flavor['hourly_rate'] = cloud_pricing.hourly_rate
+        flavor['hourly_rate'] = round(cloud_pricing.hourly_rate, 2)
         flavor['resource_type'] = cloud_pricing.resource_type
         if terms['name'] in list(set(attr_values)) \
                 and currency_id[0] == currency.id:
-            result.update({'id': product.id, 'name': product.name,
+            result.update({'product_id': product.id,
                            'meta': flavor})
         return result
 
