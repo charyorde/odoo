@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 from openerp import http
 
-# class Gcs(http.Controller):
-#     @http.route('/gcs/gcs/', auth='public')
-#     def index(self, **kw):
-#         return "Hello, world"
+# class CloudController(http.Controller):
+#    @http.route('/cloud/gcs/', auth='public')
+#    def index(self, **kw):
+#        return "Hello, world"
 
-#     @http.route('/gcs/gcs/objects/', auth='public')
-#     def list(self, **kw):
-#         return http.request.render('gcs.listing', {
-#             'root': '/gcs/gcs',
-#             'objects': http.request.env['gcs.gcs'].search([]),
-#         })
+#    @http.route('/cloud/products/', auth='public')
+#    def product_list(self, **kw):
+#        results = http.request.env['product.template'].get_cloud_products()
+#        return request.make_response(html_escape(simplejson.dumps(result)))
 
 #     @http.route('/gcs/gcs/objects/<model("gcs.gcs"):obj>/', auth='public')
 #     def object(self, obj, **kw):
