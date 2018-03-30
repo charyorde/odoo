@@ -6,10 +6,15 @@ from datetime import timedelta, datetime
 import random
 import time
 
-import gevent
 from gevent import Greenlet, getcurrent
 from gevent.local import local
 from gevent.event import AsyncResult
+from gevent import monkey
+import gevent
+monkey.patch_all()
+#from gevent.threadpool import ThreadPoolExecutor
+#from concurrent import futures
+#futures.ThreadPoolExecutor = ThreadPoolExecutor
 
 import openerp
 from openerp import models, fields, api
@@ -823,12 +828,50 @@ class C(ConsumerMixin):
                     _publish_autobids(vals)
         message.ack()
 
+import grpc
+#from concurrent import futures
+from openerp.gerp import gerp_pb2
+from openerp.gerp import gerp_pb2_grpc
+from openerp.gerp.server import GerpServer
+
+def run():
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    gerp_pb2_grpc.add_GerpServicer_to_server(
+        GerpServer(), server)
+    server.add_insecure_port('0.0.0.0:50051')
+    server.start()
+    _logger.info('Running grpc server on %s:%s', '0.0.0.0', 50051)
+    try:
+        while True:
+            #time.sleep(_ONE_DAY_IN_SECONDS)
+            time.sleep(60 * 60 * 24)
+    except KeyboardInterrupt:
+        server.stop(0)
+
+import graphene
+
+class Query(graphene.ObjectType):
+    hello = graphene.String(name=graphene.Argument(graphene.String, default_value="stranger"))
+
+    def resolve_hello(self, args, context, info):
+        return 'Hello ' + args['name']
+
+schema = graphene.Schema(query=Query)
+from graphql.execution import execute
+from graphql.execution.executors.gevent import GeventExecutor
+#execute(schema, parse({}), executor=GeventExecutor)
+#result = schema.execute('{ hello }')
+#print result.data['hello']
 
 class LiveBid(object):
     def run(self):
         if openerp.evented:
+            # gevent.spawn(run())
             gevent.spawn(C(connection).run())
         return self
 
 launcher = LiveBid()
 launcher.run()
+
+#from multiprocessing import Process
+#Process(target=run, args=())

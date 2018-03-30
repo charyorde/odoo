@@ -3,3 +3,4 @@
 # from . import models
 import partner
 import product
+import res_config

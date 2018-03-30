@@ -23,7 +23,6 @@ PPR = 4  # Products Per Row
 
 _logger = logging.getLogger(__name__)
 
-_logger.info("settings %r" % config.settings())
 
 class product_template(models.Model):
     _name = 'product.template'

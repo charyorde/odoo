@@ -1,5 +1,6 @@
 import os
 import time
+import logging
 
 from openerp import fields
 from cfenv import AppEnv
@@ -10,6 +11,8 @@ SWIFT_GW_CONTAINER = 'gw'
 SWIFT_WEB_CONTAINER = 'web'
 SWIFT_USER_CONTENT_CONTAINER = 'gwusercontent'
 SWIFT_PUBLIC_CONTAINER = 'public'
+
+_logger = logging.getLogger(__name__)
 
 
 class Config():
@@ -31,8 +34,7 @@ class Config():
                        gcm_sender_id='',
                        gcm_apikey='',
                        amqpurl='amqp://test:Wordpass15@192.168.10.29:5672/',
-                       #sio_server_host='sios.apps.greenwood.ng',
-                       sio_server_host='sios.apps.yookosapps.com',
+                       sio_server_host='sios.apps.greenwood.ng',
                        sio_server_port=80,
                        )
         elif os.environ.get('DEV'):
@@ -43,10 +45,8 @@ class Config():
                        swift_storageurl='http://192.168.2.249:8080/v1/AUTH_admin',
                        gcm_sender_id='',
                        gcm_apikey='',
-                       #amqpurl='amqp://test:Wordpass15@192.168.10.29:5672/',
-                       amqpurl='amqp://yookore:Wordpass15@192.168.121.154:5672/',
-                       #sio_server_host='sios.apps.yookore.net',
-                       sio_server_host='sios.apps.yookosapps.com',
+                       amqpurl="amqp://fwnihdxj:wY5zNSfYpvpI6PeT__g59JpAjPlIZGSZ@elephant.rmq.cloudamqp.com/fwnihdxj",
+                       sio_server_host='sios.cfapps.io',
                        sio_server_port=80,
                        )
         else:
@@ -62,6 +62,7 @@ class Config():
                        sio_server_host='sios.apps.yookosapps.com',
                        sio_server_port=80,
                        )
+        _logger.info("Gerp running on %r environment" % env['name'])
         return env
 
     def settings(self):

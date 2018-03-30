@@ -27,6 +27,7 @@
         # 'data/greenwood_account.xml',
         'views/res_partner.xml',
         'views/views.xml',
+        'views/res_config.xml',
         'views/templates.xml',
         'views/product_view.xml',
     ],

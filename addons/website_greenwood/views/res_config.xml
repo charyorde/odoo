@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+  <data>
+    <record id="action_greenwood_configuration" model="ir.actions.act_window">
+      <field name="name">General Settings</field>
+      <field name="res_model">greenwood.config.settings</field>
+      <field name="view_mode">form</field>
+      <field name="target">inline</field>
+    </record>
+    <record id="view_greenwood_config_settings" model="ir.ui.view">
+      <field name="name">General Settings</field>
+      <field name="model">greenwood.config.settings</field>
+      <field name="arch" type="xml">
+        <form string="Configure Greenwood" class="oe_form_configuration">
+          <header><button string="Apply" type="object" name="execute" class="oe_highlight"/>
+                or
+                <button string="Cancel" type="object" name="cancel" class="oe_link"/>
+            </header>
+          <div>
+            <group string="Settings">
+              <field name="amqpurl"/>
+              <field name="swift_token"/>
+              <field name="swift_storageurl"/>
+              <field name="gcm_sender_id"/>
+              <field name="gcm_apikey"/>
+              <field name="sio_server_host"/>
+              <field name="sio_server_port"/>
+            </group>
+          </div>
+        </form>
+      </field>
+    </record>
+    <menuitem id="menu_greenwood_config_settings" parent="website_greenwood.menu_greenwood_configuration" action="action_greenwood_configuration"/>
+  </data>
+</openerp>

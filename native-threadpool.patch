@@ -1,0 +1,91 @@
+diff --git a/usr/local/lib/python2.7/site-packages/gevent/threadpool.py b/gevent/threadpool.py
+index 65765065..6c3480ca 100644
+--- a/usr/local/lib/python2.7/site-packages/gevent/threadpool.py
++++ b/gevent/threadpool.py
+@@ -2,7 +2,8 @@
+ from __future__ import absolute_import
+ import sys
+ import os
+-from gevent.hub import get_hub, getcurrent, sleep, integer_types
++from gevent._compat import integer_types
++from gevent.hub import get_hub, getcurrent, sleep
+ from gevent.event import AsyncResult
+ from gevent.greenlet import Greenlet
+ from gevent.pool import GroupMappingMixin
+@@ -189,6 +190,7 @@ class ThreadPool(GroupMappingMixin):
+                 self._size -= 1
+ 
+     def _worker(self):
++        # pylint:disable=too-many-branches
+         need_decrease = True
+         try:
+             while True:
+@@ -205,7 +207,7 @@ class ThreadPool(GroupMappingMixin):
+                     func, args, kwargs, thread_result = task
+                     try:
+                         value = func(*args, **kwargs)
+-                    except:
++                    except: # pylint:disable=bare-except
+                         exc_info = getattr(sys, 'exc_info', None)
+                         if exc_info is None:
+                             return
+@@ -219,7 +221,7 @@ class ThreadPool(GroupMappingMixin):
+                         del func, args, kwargs, thread_result, task
+                 finally:
+                     if sys is None:
+-                        return
++                        return # pylint:disable=lost-exception
+                     task_queue.task_done()
+         finally:
+             if need_decrease:
+@@ -230,6 +232,7 @@ class ThreadPool(GroupMappingMixin):
+         .. deprecated:: 1.1a2
+            Identical to :meth:`apply`; the ``expected_errors`` argument is ignored.
+         """
++        # pylint:disable=unused-argument
+         # Deprecated but never documented. In the past, before
+         # self.apply() allowed all errors to be raised to the caller,
+         # expected_errors allowed a caller to specify a set of errors
+@@ -333,3 +336,42 @@ def wrap_errors(errors, function, args, kwargs):
+         return True, function(*args, **kwargs)
+     except errors as ex:
+         return False, ex
++
++try:
++    import concurrent.futures
++except ImportError:
++    pass
++else:
++    __all__.append("ThreadPoolExecutor")
++
++    class ThreadPoolExecutor(concurrent.futures.ThreadPoolExecutor):
++        """
++        A version of :class:`concurrent.futures.ThreadPoolExecutor` that
++        always uses native threads, even when threading is monkey-patched.
++
++        .. versionadded:: 1.2a1
++        """
++
++        def __init__(self, max_workers):
++            super(ThreadPoolExecutor, self).__init__(max_workers)
++            self._threadpool = ThreadPool(max_workers)
++
++        def submit(self, fn, *args, **kwargs):
++            future = super(ThreadPoolExecutor, self).submit(fn, *args, **kwargs)
++            with self._shutdown_lock:
++                work_item = self._work_queue.get()
++                assert work_item.fn is fn
++
++            self._threadpool.spawn(work_item.run)
++            return future
++
++        def shutdown(self, wait=True):
++            super(ThreadPoolExecutor, self).shutdown(wait)
++            self._threadpool.kill()
++
++        kill = shutdown # greentest compat
++
++        def _adjust_thread_count(self):
++            # Does nothing. We don't want to spawn any "threads",
++            # let the threadpool handle that.
++            pass

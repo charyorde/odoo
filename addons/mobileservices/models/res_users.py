@@ -201,3 +201,48 @@ class res_users(models.Model):
             _logger.exception('error when resetting password')
         return msg
 
+    def find_user(self, cr, uid, data):
+        if len(data.keys()) > 1:
+            raise ValueError("Only one of email, id, cloud_project_id or cloud_userid is required")
+
+        email = data.get('email')
+        user_id = data.get('user_id')
+        cloud_userid = data.get('cloud_userid')
+        cloud_project_id = data.get('cloud_project_id')
+
+        if email:
+            domain = [('email', '=', email)]
+
+        if user_id:
+            domain = [('id', '=', user_id)]
+
+        if cloud_userid:
+            domain = [('cloud_userid', '=', cloud_userid)]
+
+        if cloud_project_id:
+            domain = [('cloud_project_id', '=', cloud_project_id)]
+
+        ids = self.search(cr, uid, domain)
+        if not ids:
+            #raise Exception("User not found")
+            return None
+        user = self.browse(cr, uid, ids)
+        values = {'id': user.id, 'login_date': user.login_date,
+                    'partner_id': user.partner_id.id, 'login': user.login,
+                  'active': user.active, 'email': user.email,
+                  'cloud_userid': user.cloud_userid, 'cloud_project_id': user.cloud_project_id,
+                  'cloud_project_name': user.cloud_project_name,
+                  'session_token': user.session_token}
+        return values
+
+    def reset_password_external(self, cr, uid, token, context=None):
+        """
+        Resets password with a valid token.
+
+        This is a federated feature to be used by all external apps to
+        gerp
+        """
+        if not token:
+            raise ValueError("Please supply a token")
+        return self.signup(cr, uid, token, context=context)
+

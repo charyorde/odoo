@@ -125,17 +125,32 @@ class TxPaystack(models.Model):
     # SERVER2SERVER RELATED METHODS
     # --------------------------------------------------
 
+    def paystack_s2s_mobile_send(self, cr, uid, values, cc_values, context=None):
+        order_obj = self.pool['sale.order']
+        metadata = values.get('metadata')
+        data = {'user_id': metadata['custom_fields']['user_id'],
+                'product': [metadata['custom_fields']['product_id']]}
+        order = order_obj.create_mobile_order(cr, uid, data)
+        assert order, "Failed to create order"
+        # Construct metadata for mobile payment
+        # metadata: {custom_fields: [{order_id: order.id, acquirer_id: ''}]}
+        values['metadata']['custom_fields'][0]['order_id'] = order.id
+        vals = values
+        vals['metadata'] = json.dumps(metadata)
+        return self._paystack_s2s_send(cr, uid, vals, cc_values, context=context)
+
     def _paystack_s2s_send(self, cr, uid, values, cc_values, context=None):
         acquirer_obj = self.pool['payment.acquirer']
         order_obj = self.pool['sale.order']
         meta = json.loads(values['metadata'])['custom_fields'][0]
         acquirer_id = meta['acquirer_id']
         order = order_obj.browse(cr, uid, [meta['order_id']])
+        amount = int(1.0 * 100)
         tx_values = {
             'acquirer_id': acquirer_id,
             'type': 'server2server',
             #'amount': order.amount_total,
-            'amount': int(1.0 * 100),
+            'amount': amount,
             'currency_id': order.pricelist_id.currency_id.id,
             'partner_id': order.partner_id.id,
             'partner_country_id': order.partner_id.country_id.id,
@@ -150,6 +165,13 @@ class TxPaystack(models.Model):
                 'payment_tx_id': tx_id
             }, context=context)
 
+        # Only mobile payment should have cc_values set
+        if meta.get('is_mobile'):
+            return {'reference': values['reference'],
+                    'order_id': order.id, 'amount': amount,
+                    'currency_id': order.pricelist_id.currency_id.id,
+                    'acquirer_id': acquirer_id}
+
         token = acquirer_obj._paystack_get_access_token(cr, uid, acquirer_id)
         headers = acquirer_obj._make_header(cr, uid, acquirer_id)
         values['reference'] = tx_values['reference']
@@ -163,6 +185,30 @@ class TxPaystack(models.Model):
         else:
             res = (tx_id, False)
         return res
+
+    def mobile_callback_validate(self, cr, uid, reference, context=None):
+        res, pool = False, self.pool
+        acquirer_obj = pool['payment.acquirer']
+        tx_obj = pool['payment.transaction']
+        tx = None
+        if reference:
+            tx_ids = tx_obj.search(cr, SUPERUSER_ID, [('reference', '=', reference)], context=context)
+            if tx_ids:
+                tx = tx_obj.browse(cr, SUPERUSER_ID, tx_ids[0], context=context)
+        paystack_urls = acquirer_obj._get_paystack_endpoints(cr, SUPERUSER_ID, tx and tx.acquirer_id and tx.acquirer_id.environment or 'prod', context=context)
+        validate_url = urlparse.urljoin(paystack_urls['paystack_verify_reference_url'], reference)
+        acquirer_id = tx.acquirer_id.id
+        headers = acquirer_obj._make_header(cr, SUPERUSER_ID, acquirer_id, context=context)
+        resp = requests.get(validate_url, headers=headers)
+        _logger.info('Paystack verify response %r' % resp)
+        if resp.status_code == 200:
+            data = resp.json()
+            _logger.info('Paystack: validated data')
+            res = tx_obj.s2s_feedback(cr, SUPERUSER_ID, tx.id, data, context=context)
+        else:
+            _logger.warning('Paystack: unrecognized paystack answer, received %s' % resp.text)
+        return res
+
 
     #def paystack_create(self, cr, uid, values, context=None):
         # return self.s2s_create(cr, uid, values, context=None)

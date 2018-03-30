@@ -41,3 +41,4 @@ install/win32/meta.py
 
 # greenwood files
 certbot.log
+*.dev

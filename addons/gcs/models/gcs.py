@@ -162,6 +162,9 @@ class product_template(models.Model):
     cloud_pricing = fields.Many2one('gcs.instance.pricing')
 
     def cloud_products(self, cr, uid, context=None):
+        """
+        Retrieve all cloud products
+        """
         pool = self.pool
         company_ids = pool['res.company'].search(cr, uid, [('name', '=', 'GreenCloud')], context=context)
         company_id = company_ids[0]
@@ -222,12 +225,18 @@ class res_user(models.Model):
     _inherit = 'res.users'
 
     cloud_userid = fields.Char(index=True, help="Cloud userid")
+    cloud_project_id = fields.Char(index=True, help="Cloud tenant id")
+    cloud_project_name = fields.Char(help="Project/Tenant name")
+    cloud_user_token = fields.Char(help="OpenStack user token")
 
     def cloud_signup(self, cr, uid, post, context=None):
         _logger.info("New Cloud user signup %r" % post)
         pool = self.pool
         icp = pool['ir.config_parameter']
         cloud_userid = post.get('cloud_userid')
+        project_id = post.get('project_id')
+        cloud_user_token = post.get('usertoken')
+        cloud_project_name = post.get('name')
         login = post.get('login')
         company_ids = pool['res.company'].search(cr, uid, [('name', '=', 'GreenCloud')], context=context)
         company_id = company_ids[0]
@@ -246,7 +255,10 @@ class res_user(models.Model):
                 'groups_id': [(6, 0, [group_multi_currency, group_multi_company])],
                 'company_ids': [(6, 0, [company_id])],
                 #'company_ids': [(4, company_id)],
-                'cloud_userid': cloud_userid
+                'cloud_userid': cloud_userid,
+                'cloud_project_id': project_id,
+                'cloud_user_token': cloud_user_token,
+                'cloud_project_name': cloud_project_name
             }
             return self.write(cr, SUPERUSER_ID, ids, vals, context=context)
         username, login = post.get('username'), post.get('login')
@@ -258,7 +270,10 @@ class res_user(models.Model):
             'token': None,
             'company_id': company_id,
             'userhash': username,
-            'cloud_userid': post.get('cloud_user_id')
+            'cloud_userid': cloud_userid,
+            'cloud_project_id': project_id,
+            'cloud_project_name': cloud_project_name,
+            'cloud_user_token': cloud_user_token
         }
         values.update(config)
         db, login, password = pool['res.users'].signup(cr, SUPERUSER_ID, values, None)
@@ -286,10 +301,103 @@ class res_user(models.Model):
             vals['company_ids'] = [(6, 0, [company_id])]
         return self.write(cr, SUPERUSER_ID, user_id, vals, context=context)
 
+    @api.multi
+    def cloud_token_update(self, vals):
+        cloud_userid = vals.get('cloud_userid')
+        cloud_user_token = vals.get('cloud_user_token')
+        user_obj = self.search([('cloud_user_id', '=', cloud_userid)])
+        return userobj.write({'cloud_user_token': cloud_user_token})
+
+
+class res_partner(models.Model):
+    _name = 'res.partner'
+    _inherit = 'res.partner'
+
+    def cloud_partner_update(self, cr, uid, cloud_userid, vals):
+        user_obj = self.pool['res.users']
+        ids = user_obj.search(cr, uid, [('cloud_userid', '=', cloud_userid)])
+        return self.write(cr, uid, ids, vals)
+
+
+class account_analytic_account(models.Model):
+    _name = "account.analytic.account"
+    _inherit = "account.analytic.account"
+
+    def create_contract(self, cr, uid, data):
+        """
+        Create contract if user doesn't have existing cloud contract
+
+        @deprecated
+        """
+        contract_ids = self.search(cr, uid, [])
+        if not contract_ids:
+            self.create(cr, uid, data)
+
+    def add_cloud_invoice_line(self, cr, uid, data):
+        """
+        When a user adds new cloud product, add it as a contract
+        invoice line to existing user contract
+        """
+        # load the contract by userid
+        # create new account_analytic_invoice_line identified by
+        # account_analytic_id
+        pass
+
+    def update_contract_line(self, cr, uid, data):
+        """
+        Update contract invoice line with cloud usage metrics
+
+        @deprecated
+        """
+        pool = self.pool
+        user_id = data.get('user_id')
+        # cloud_userid, company name
+        company_ids = pool['res.company'].search(cr, uid, [('name', '=', 'GreenCloud')], context=context)
+        contract_ids = self.search(cr, uid, [
+            ('user_id', '=', user_id),
+            ('company_id', '=', company_ids[0])])
+        contract = self.browse(cr, uid, contract_ids)
+        if contract:
+        # Get contract.recurring_invoice_line_ids
+        # for each, update qty, price
+            for line in contract.recurring_invoice_line_ids:
+                for product in data:
+                    if line.product_id == product['product_id']:
+                        values = {'quantity': product['product_uom_qty'],
+                                'price_unit': product['price_unit']}
+                        line.write(values)
+
 
 class sale_order(models.Model):
     _name = 'sale.order'
     _inherit = 'sale.order'
+
+    def add_cloud_sol(self, cr, uid, data, context=None):
+        """
+        Add cloud sale order line to user's existing cloud sale order
+        Creates new sale order if user doesn't have existing cloud sale order
+
+        @deprecated
+        """
+        pool = self.pool
+        company_ids = pool['res.company'].search(cr, uid, [('name', '=', 'GreenCloud')], context=context)
+        company_id = company_ids[0]
+        sol = pool['sale.order.line']
+        # load user existing cloud sale order or create one if non exist.
+        sale_order_ids = self.search(cr, uid, [
+            ("partner_id", "=", partner_id),
+            ("state", "=", "draft"),
+            ("company_id", "=", company_id)
+        ], context=context)
+
+        if sale_order_ids:
+            sale_order = self.browse(cr, SUPERUSER_ID, sale_order_ids[0], context=context)
+        else:
+            sale_order_ids = self.create(cr, SUPERUSER_ID, values, context=context)
+            sale_order = self.browse(cr, SUPERUSER_ID, sale_order_ids, context=context)
+
+        line_id = sol.create(cr, uid, data, context=context)
+        return True if line_id else False
 
     def cloud_bill(self, cr, uid, params, context=None):
         """
@@ -318,23 +426,33 @@ class sale_order(models.Model):
                                                          ('company_id', '=', company_id)])
         acquirer = dict(pool['payment.acquirer'].name_search(cr, uid, name='Paystack'))
 
-        values = {
-            'user_id': user_id,
-            'partner_id': partner.id,
-            'pricelist_id': pricelist_id[0],
-            'section_id': pool['ir.model.data'].get_object_reference(cr, uid, 'website', 'salesteam_website_sales')[1],
-            'company_id': company_id,
-            'payment_acquirer_id': acquirer.keys()[0]
-        }
-        sale_order_id = self.create(cr, SUPERUSER_ID, values, context=context)
-        cr.commit()
-        values = self.onchange_partner_id(cr, SUPERUSER_ID, [], partner.id, context=context)['value']
-        self.write(cr, SUPERUSER_ID, [sale_order_id], values, context=context)
+        sale_order_ids = self.search(cr, uid, [
+            ("partner_id", "=", partner.id),
+            ("state", "=", "draft"),
+            ("company_id", "=", company_id)
+        ], context=context)
+
+        if sale_order_ids:
+            sale_order = self.browse(cr, SUPERUSER_ID, sale_order_ids[0], context=context)
+            sale_order_id = sale_order_ids[0]
+        else:
+            values = {
+                'user_id': user_id,
+                'partner_id': partner.id,
+                'pricelist_id': pricelist_id[0],
+                'section_id': pool['ir.model.data'].get_object_reference(cr, uid, 'website', 'salesteam_website_sales')[1],
+                'company_id': company_id,
+                'payment_acquirer_id': acquirer.keys()[0]
+            }
+            sale_order_id = self.create(cr, SUPERUSER_ID, values, context=context)
+            cr.commit()
+            values = self.onchange_partner_id(cr, SUPERUSER_ID, [], partner.id, context=context)['value']
+            self.write(cr, SUPERUSER_ID, [sale_order_id], values, context=context)
 
         products = params.get('lines')
 
         # create order_line from params
-        vals = self._prepare_products(cr, uid, sale_order_id, products)
+        vals = self._prepare_cloud_products(cr, uid, sale_order_id, products)
         _logger.info("::cloud_bill sale_order_line %r" % vals)
         for val in vals:
             sol.create(cr, uid, val, context=context)
@@ -352,7 +470,10 @@ class sale_order(models.Model):
             invoice_obj.invoice_validate(cr, uid, inv_id)
         return self._send_invoice(cr, uid, inv_id, [sale_order_id])
 
-    def _prepare_products(self, cr, uid, order_id, lines, context=None):
+    def _prepare_cloud_product(self):
+        pass
+
+    def _prepare_cloud_products(self, cr, uid, order_id, lines, context=None):
         _logger.info("Processing GCS Order lines %r" % lines)
         pool = self.pool
         product_obj = pool['product.product']
@@ -468,6 +589,84 @@ class sale_order(models.Model):
 
         #for c in clouders:
             #FutureWorker(max_workers=1).run(run_cloud_metrics, c)
+
+
+class cloud_order(models.Model):
+    """
+    Cloud instance order
+    """
+    _name = 'cloud.instance.order'
+
+    resource_id = fields.Char(index=True)
+    user_id = fields.Text(index=True)
+    name = fields.Char()
+    vm_pricing_id = fields.Integer()
+    product_id = fields.Integer()
+    resource_type = fields.Text()
+    status = fields.Text()
+
+    def get_instance_order(self, cr, uid, user_id):
+        """
+        Load a user's instance orders
+        """
+        domain = [('user_id', '=', user_id)]
+        ids = self.search(cr, uid, domain)
+        return self.browse(cr, uid, ids)
+
+
+class userapps(models.Model):
+    _name = 'gcs.apps'
+
+    app_guid = fields.Char(required=True)
+    project_id = fields.Char(required=True, index=True)
+    buildno = fields.Char(help="App build number sorted by revision")
+
+    def create(self):
+        pass
+
+    def write(self):
+        pass
+
+
+class greenbox(models.Model):
+    _name = 'greenbox.files'
+
+    cloud_userid = fields.Char(required=True, index=True)
+    project_id = fields.Char(required=True, index=True)
+    filename = fields.Char(required=True)
+    fileurl = fields.Char()
+    filesize = fields.Integer()
+    modified = fields.Text()
+
+    def create(self):
+        pass
+
+    def write(self):
+        pass
+
+
+class socials_account(models.Model):
+    _name = 'gcs.socials.account'
+
+    name = fields.Char(required=True)
+    cloud_userid = fields.Char()
+    guid = fields.Char(required=True)
+    space_guid = fields.Char()
+    domain_guid = fields.Char()
+    domain = fields.Char()
+    rabbitmq_creds = fields.Char(string="RabbitMQ credentials")
+    postgresql_creds = fields.Char(string="Postgres credentials")
+    kaltura_creds = fields.Char(string="Kaltura credentials")
+    neo4j_creds = fields.Char(string="Neo4j credentials")
+    nfs_path = fields.Char(string="NFS path")
+    cassandra_creds = fields.Char(string="Cassandra credentials")
+    provisioned = fields.Boolean(default=False, help="Is the social account provisioned?")
+
+    def create(self):
+        pass
+
+    def write(self):
+        pass
 
 
 class C(ConsumerMixin):

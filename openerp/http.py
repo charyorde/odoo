@@ -279,7 +279,7 @@ class WebRequest(object):
     def _handle_exception(self, exception):
         """Called within an except block to allow converting exceptions
            to abitrary responses. Anything returned (except None) will
-           be used as response.""" 
+           be used as response."""
         self._failed = exception # prevent tx commit
         if not isinstance(exception, NO_POSTMORTEM) \
                 and not isinstance(exception, werkzeug.exceptions.HTTPException):
@@ -478,7 +478,7 @@ class JsonRequest(WebRequest):
         self.jsonp = jsonp
         request = None
         request_id = args.get('id')
-        
+
         if jsonp and self.httprequest.method == 'POST':
             # jsonp 2 steps step1 POST: save call
             def handler():
@@ -626,7 +626,7 @@ def to_jsonable(o):
     return ustr(o)
 
 def jsonrequest(f):
-    """ 
+    """
         .. deprecated:: 8.0
             Use the :func:`~openerp.http.route` decorator instead.
     """
@@ -738,7 +738,7 @@ class HttpRequest(WebRequest):
         return werkzeug.exceptions.NotFound(description)
 
 def httprequest(f):
-    """ 
+    """
         .. deprecated:: 8.0
 
         Use the :func:`~openerp.http.route` decorator instead.
@@ -904,7 +904,7 @@ class Model(object):
             if not request.db or not request.uid or self.session.db != request.db \
                 or self.session.uid != request.uid:
                 raise Exception("Trying to use Model with badly configured database or user.")
-                
+
             if method.startswith('_'):
                 raise Exception("Access denied")
             mod = request.registry[self.model]
@@ -1593,6 +1593,163 @@ def send_file(filepath_or_fp, mimetype=None, as_attachment=False, filename=None,
     return rv
 
 #----------------------------------------------------------
+# GraphQl integration
+#----------------------------------------------------------
+from functools import partial
+import graphql
+#from graphql.type.schema import GraphQLSchema
+from graphql_server import (HttpQueryError, default_format_error,
+                            encode_execution_results, json_encode,
+                            load_json_body, run_http_query)
+from openerp.graphql.api import Schema
+from openerp.graphql.render_graphiql import TEMPLATE
+from jinja2.sandbox import SandboxedEnvironment
+
+
+def render_template_string(source, **context):
+    jinja_env = SandboxedEnvironment()
+    return jinja_env.from_string(source).render(context)
+
+def render_graphiql(params, result, graphiql_version=None, graphiql_template=None):
+    template = graphiql_template or TEMPLATE
+    return render_template_string(
+        template,
+        graphiql_version=graphiql_version,
+        result=result,
+        params=params
+    )
+
+
+class GraphQL(object):
+    """
+    Inspired by flask-graphql
+    """
+    schema = None
+    executor = None
+    root_value = None
+    pretty = False
+    graphiql = False
+    graphiql_version = None
+    graphiql_template = None
+    middleware = None
+    batch = False
+
+    methods = ['GET', 'POST', 'PUT', 'DELETE']
+
+    def __init__(self, **kwargs):
+        print("KWARGS", kwargs.items())
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+		#assert isinstance(self.schema, GraphQLSchema), 'A Schema is required to be provided to GraphQLView.'
+
+    def get_root_value(self):
+        return self.root_value
+
+    def get_context(self):
+        return request
+
+    def get_middleware(self):
+        return self.middleware
+
+    def get_executor(self):
+        return self.executor
+
+    def render_graphiql(self, params, result):
+        return render_graphiql(
+            params=params,
+            result=result,
+            graphiql_version=self.graphiql_version,
+            graphiql_template=self.graphiql_template,
+        )
+
+    format_error = staticmethod(default_format_error)
+    encode = staticmethod(json_encode)
+
+    def dispatch_request(self):
+        try:
+            request_method = request.httprequest.method.lower()
+            data = self.parse_body()
+            _logger.info("Received graphql request")
+
+            show_graphiql = request_method == 'get' and self.should_display_graphiql()
+            catch = show_graphiql
+
+            pretty = self.pretty or show_graphiql or request.httprequest.args.get('pretty')
+
+            execution_results, all_params = run_http_query(
+                self.schema,
+                request_method,
+                data,
+                query_data=request.httprequest.args,
+                batch_enabled=self.batch,
+                catch=catch,
+
+				# Execute options
+                root_value=self.get_root_value(),
+                context_value=self.get_context(),
+                middleware=self.get_middleware(),
+                executor=self.get_executor(),
+            )
+
+            result, status_code = encode_execution_results(
+                execution_results,
+                is_batch=isinstance(data, list),
+                format_error=self.format_error,
+                encode=partial(self.encode, pretty=pretty)
+            )
+
+            if show_graphiql:
+                return self.render_graphiql(
+                    params=all_params[0],
+                    result=result
+                )
+
+            return Response(
+                result,
+                status=status_code,
+                content_type='application/json'
+            )
+        except HttpQueryError as e:
+            return Response(
+                self.encode({
+                    'errors': [self.format_error(e)]
+                }),
+                status=e.status_code,
+                headers=e.headers,
+                content_type='application/json'
+            )
+
+    def parse_body(self):
+        # We use mimetype here since we don't need the other
+        # information provided by content_type
+        content_type = request.httprequest.mimetype
+        if content_type == 'application/graphql':
+            return {'query': request.httprequest.data.decode('utf8')}
+
+        elif content_type == 'application/json':
+            return load_json_body(request.httprequest.data.decode('utf8'))
+
+        elif content_type in ('application/x-www-form-urlencoded', 'multipart/form-data'):
+            return request.httprequest.form
+
+        return load_json_body(request.httprequest.data.decode('utf8'))
+
+    def should_display_graphiql(self):
+        if not self.graphiql or 'raw' in request.httprequest.args:
+            return False
+
+        return self.request_wants_html()
+
+    def request_wants_html(self):
+        best = request.httprequest.accept_mimetypes \
+            .best_match(['application/json', 'text/html'])
+        return best == 'text/html' and \
+            request.httprequest.accept_mimetypes[best] > \
+            request.httprequest.accept_mimetypes['application/json']
+
+#----------------------------------------------------------
 # RPC controller
 #----------------------------------------------------------
 class CommonController(Controller):
@@ -1601,6 +1758,10 @@ class CommonController(Controller):
     def jsonrpc(self, service, method, args):
         """ Method used by client APIs to contact OpenERP. """
         return dispatch_rpc(service, method, args)
+
+    @route('/graphql', type='http', auth="none")
+    def graphql_handler(self):
+        return GraphQL(schema=Schema, graphiql=True,).dispatch_request()
 
     @route('/gen_session_id', type='json', auth="none")
     def gen_session_id(self):

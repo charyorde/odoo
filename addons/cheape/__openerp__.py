@@ -25,6 +25,7 @@
     'data': [
         'security/groups.xml',
         'security/ir.model.access.csv',
+        'data/res_users_data.xml',
         'data/cheape_cron.xml',
         'templates.xml',
         'views/views.xml'

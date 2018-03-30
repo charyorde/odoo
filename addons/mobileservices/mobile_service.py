@@ -44,6 +44,19 @@ def _mobile_users_dispatch(db_name, method_name, *method_args):
             method_name, method_args)
         raise
 
+def _mobile_payment_dispatch(db_name, method_name, *method_args):
+    try:
+        registry = openerp.modules.registry.RegistryManager.get(db_name)
+        assert registry, 'Unknown database %s' % db_name
+        with registry.cursor() as cr:
+            users = registry['payment.transaction']
+            return getattr(users, method_name)(cr, *method_args)
+
+    except Exception, e:
+        _logger.exception('Failed to execute Mobile service method %s with args %r.',
+            method_name, method_args)
+        raise
+
 def exp_send_email(db_name, uid, passwd, user_id, message):
     return getattr(common, 'send_email')(user_id, message)
 
@@ -79,6 +92,12 @@ def exp_create_tx(db_name, uid, passwd, user_id, acquirer_id, context=None):
 
 def exp_suggested_products(db_name, uid, passwd, product, context=None):
     return _mobile_product_dispatch(db_name, 'suggested_products', product, context)
+
+def exp_pay(db_name, uid, passwd, values, cc_values, context=None):
+    return _mobile_payment_dispatch(db_name, 'paystack_s2s_mobile_send', values, cc_values)
+
+def exp_pay_validate(db_name, uid, passwd, reference, context=None):
+    return _mobile_payment_dispatch(db_name, 'mobile_callback_validate', reference, context)
 
 def exp_country_states(db_name, uid, passwd, country_id):
     return _mobile_product_dispatch(db_name, 'country_states', country_id)
@@ -123,6 +142,8 @@ def dispatch(method, params):
                   'confirm_order',
                   'suggested_products',
                   'create_tx',
+                  'pay',
+                  'pay_validate',
                   'country_states',
                   'product_cart_delete',
                   'send_email',
