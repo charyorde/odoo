@@ -4,13 +4,13 @@
 # 
 # Translators:
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2014
-# Paolo Valier, 2016
+# Paolo Valier, 2016-2017
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo 8.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-11-24 02:53+0000\n"
-"PO-Revision-Date: 2016-05-22 16:17+0000\n"
+"PO-Revision-Date: 2017-09-22 08:15+0000\n"
 "Last-Translator: Paolo Valier\n"
 "Language-Team: Italian (http://www.transifex.com/odoo/odoo-8/language/it/)\n"
 "MIME-Version: 1.0\n"
@@ -1016,7 +1016,7 @@ msgstr ""
 #. module: l10n_be_coda
 #: model:account.coda.trans.code,description:l10n_be_coda.actcc_80_27
 msgid "Subscription fee"
-msgstr ""
+msgstr "Costo Sottoscrizione"
 
 #. module: l10n_be_coda
 #: model:account.coda.trans.category,description:l10n_be_coda.actrca_036
@@ -1922,7 +1922,7 @@ msgstr ""
 msgid ""
 "\n"
 "System Error : "
-msgstr ""
+msgstr "\nErrore di Sistema :"
 
 #. module: l10n_be_coda
 #: model:account.coda.trans.code,description:l10n_be_coda.actcc_01_60
@@ -3308,7 +3308,7 @@ msgstr ""
 msgid ""
 "\n"
 "Error ! "
-msgstr ""
+msgstr "\nErrore !"
 
 #. module: l10n_be_coda
 #: view:account.coda:0 field:account.coda,user_id:0

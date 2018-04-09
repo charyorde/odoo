@@ -746,8 +746,12 @@ class BaseModel(object):
         cls = type(self)
         methods = []
         for attr, func in getmembers(cls, is_constraint):
-            if not all(name in cls._fields for name in func._constrains):
-                _logger.warning("@constrains%r parameters must be field names", func._constrains)
+            for name in func._constrains:
+                field = cls._fields.get(name)
+                if not field:
+                    _logger.warning("method %s.%s: @constrains parameter %r is not a field name", cls._name, attr, name)
+                elif not (field.store or field.column and field.column._fnct_inv or field.inherited):
+                    _logger.warning("method %s.%s: @constrains parameter %r is not writeable", cls._name, attr, name)
             methods.append(func)
 
         # optimization: memoize result on cls, it will not be recomputed
@@ -1920,7 +1924,7 @@ class BaseModel(object):
         for order_part in orderby.split(','):
             order_split = order_part.split()
             order_field = order_split[0]
-            if order_field in groupby_fields:
+            if order_field == 'id' or order_field in groupby_fields:
 
                 if self._fields[order_field.split(':')[0]].type == 'many2one':
                     order_clause = self._generate_order_by(order_part, query).replace('ORDER BY ', '')
@@ -2123,7 +2127,7 @@ class BaseModel(object):
         prefix_term = lambda prefix, term: ('%s %s' % (prefix, term)) if term else ''
 
         query = """
-            SELECT min(%(table)s.id) AS id, count(%(table)s.id) AS %(count_field)s %(extra_fields)s
+            SELECT min("%(table)s".id) AS id, count("%(table)s".id) AS "%(count_field)s" %(extra_fields)s
             FROM %(from)s
             %(where)s
             %(groupby)s
@@ -3202,9 +3206,6 @@ class BaseModel(object):
         # fetch the records of this model without field_name in their cache
         records = self._in_cache_without(field)
 
-        if len(records) > PREFETCH_MAX:
-            records = records[:PREFETCH_MAX] | self
-
         # determine which fields can be prefetched
         if not self.env.in_draft and \
                 self._context.get('prefetch_fields', True) and \
@@ -3787,12 +3788,18 @@ class BaseModel(object):
         if old_vals:
             self._write(old_vals)
 
-        # put the values of pure new-style fields into cache, and inverse them
         if new_vals:
+            # put the values of pure new-style fields into cache
             for record in self:
                 record._cache.update(record._convert_to_cache(new_vals, update=True))
+            # mark the fields as being computed, to avoid their invalidation
+            for key in new_vals:
+                self.env.computed[self._fields[key]].update(self._ids)
+            # inverse the fields
             for key in new_vals:
                 self._fields[key].determine_inverse(self)
+            for key in new_vals:
+                self.env.computed[self._fields[key]].difference_update(self._ids)
 
         return True
 
@@ -4093,10 +4100,16 @@ class BaseModel(object):
         # create record with old-style fields
         record = self.browse(self._create(old_vals))
 
-        # put the values of pure new-style fields into cache, and inverse them
+        # put the values of pure new-style fields into cache
         record._cache.update(record._convert_to_cache(new_vals))
+        # mark the fields as being computed, to avoid their invalidation
+        for key in new_vals:
+            self.env.computed[self._fields[key]].add(record.id)
+        # inverse the fields
         for key in new_vals:
             self._fields[key].determine_inverse(record)
+        for key in new_vals:
+            self.env.computed[self._fields[key]].discard(record.id)
 
         return record
 
@@ -5659,16 +5672,19 @@ class BaseModel(object):
         return RecordCache(self)
 
     @api.model
-    def _in_cache_without(self, field):
-        """ Make sure ``self`` is present in cache (for prefetching), and return
-            the records of model ``self`` in cache that have no value for ``field``
-            (:class:`Field` instance).
+    def _in_cache_without(self, field, limit=PREFETCH_MAX):
+        """ Return records to prefetch that have no value in cache for ``field``
+            (:class:`Field` instance), including ``self``.
+            Return at most ``limit`` records.
         """
         env = self.env
         prefetch_ids = env.prefetch[self._name]
         prefetch_ids.update(self._ids)
         ids = filter(None, prefetch_ids - set(env.cache[field]))
-        return self.browse(ids)
+        recs = self.browse(ids)
+        if limit and len(recs) > limit:
+            recs = self + (recs - self)[:(limit - len(self))]
+        return recs
 
     @api.model
     def refresh(self):

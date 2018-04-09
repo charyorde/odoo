@@ -102,6 +102,12 @@ class sale_order(osv.osv):
         'picking_policy': 'direct',
         'order_policy': 'manual',
     }
+
+    #FORWARDPORT UP TO SAAS-6
+    def _get_customer_lead(self, cr, uid, product_tmpl_id):
+        super(sale_order, self)._get_customer_lead(cr, uid, product_tmpl_id)
+        return product_tmpl_id.sale_delay
+
     def onchange_warehouse_id(self, cr, uid, ids, warehouse_id, context=None):
         val = {}
         if warehouse_id:
@@ -254,11 +260,12 @@ class sale_order_line(osv.osv):
                 qty_pack = pack.qty
                 type_ul = pack.ul
                 if not warning_msgs:
-                    warn_msg = _("You selected a quantity of %d Units.\n"
+                    uom_obj = product_uom_obj.browse(cr, uid, uom, context=context)
+                    warn_msg = _("You selected a quantity of %s %s.\n"
                                 "But it's not compatible with the selected packaging.\n"
                                 "Here is a proposition of quantities according to the packaging:\n"
                                 "EAN: %s Quantity: %s Type of ul: %s") % \
-                                    (qty, ean, qty_pack, type_ul.name)
+                                    (qty, uom_obj.name, ean, qty_pack, type_ul.name)
                     warning_msgs += _("Picking Information ! : ") + warn_msg + "\n\n"
                 warning = {
                        'title': _('Configuration Error!'),
